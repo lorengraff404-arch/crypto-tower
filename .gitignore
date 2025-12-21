@@ -31,6 +31,7 @@ docker-compose.override.yml
 # Backend (Go)
 backend/bin/
 backend/tmp/
+backend/api
 
 # Duplicates
 Crypto_Towell_Defense_new/
