@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - Island Raids</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ui-utils.css">
+    <link rel="stylesheet" href="css/islands.css">
+</head>
+
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>Island Expeditions</h1>
+            <div class="user-stats">
+                <span id="user-gtk">GTK: --</span>
+                <span id="user-level">Level: --</span>
+                <span id="raids-today">Raids: 0/5</span>
+            </div>
+            <button onclick="window.location.href='index.html'" class="btn-back">← Back to Home</button>
+        </header>
+
+        <!-- Island Selection Screen -->
+        <div id="island-selection" class="island-grid">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Island Detail Modal -->
+        <div id="island-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2 id="modal-island-name"></h2>
+                <div class="island-details">
+                    <div class="island-info">
+                        <p><strong>Biome:</strong> <span id="modal-biome"></span></p>
+                        <p><strong>Difficulty:</strong> <span id="modal-difficulty"></span></p>
+                        <p><strong>Entry Fee:</strong> <span id="modal-entry-fee"></span> GTK</p>
+                        <p><strong>Base Reward:</strong> <span id="modal-reward"></span> GTK</p>
+                        <p><strong>Waves:</strong> <span id="modal-waves"></span></p>
+                    </div>
+                    <div class="enemies-preview" id="modal-enemies">
+                        <!-- Enemy list -->
+                    </div>
+                    <div class="drops-preview" id="modal-drops">
+                        <!-- Drop rates -->
+                    </div>
+                </div>
+                <button id="btn-enter-raid" class="btn-primary">Enter Raid</button>
+                <p class="warning-text">Daily Limit: <span id="modal-raids-remaining"></span> raids remaining</p>
+            </div>
+        </div>
+
+        <!-- Raid Battle Interface (placeholder) -->
+        <div id="raid-battle" class="hidden">
+            <h2>Raid in Progress</h2>
+            <div class="battle-area">
+                <div id="wave-indicator">Wave: <span id="current-wave">1</span> / <span id="total-waves">10</span></div>
+                <div id="hp-indicator">HP: <span id=player-hp">8</span> / 8</div>
+                <div id="enemies-container">
+                    <!-- Battle UI - to be implemented with game engine -->
+                </div>
+            </div>
+            <button id="btn-end-raid" class="btn-secondary">End Raid</button>
+        </div>
+
+        <!-- Loot Display Modal -->
+        <div id="loot-modal" class="modal hidden">
+            <div class="modal-content loot-display">
+                <h2>Raid Complete!</h2>
+                <div class="raid-results">
+                    <p>Waves Cleared: <span id="loot-waves"></span></p>
+                    <p>HP Remaining: <span id="loot-hp"></span></p>
+                    <p class="perfect-clear hidden" id="perfect-indicator">🎉 PERFECT CLEAR! +50 GTK Bonus</p>
+                </div>
+                <div class="rewards-grid" id="loot-items">
+                    <!-- Rewards displayed here -->
+                </div>
+                <button onclick="closeLootModal()" class="btn-primary">Collect Rewards</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/wallet.js"></script>
+    <script type="module" src="dist/js/ui-utils.js"></script>
+    <script type="module" src="dist/js/islands.js"></script>
+</body>
+
+</html>

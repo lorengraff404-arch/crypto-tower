@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ctd-api
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - APP_ENV=local
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=ctd_user
+      - DB_PASSWORD=ctd_password
+      - DB_NAME=crypto_tower_defense
+      - DB_SSLMODE=disable
+    depends_on:
+      - db
+    networks:
+      - ctd-network
+    restart: unless-stopped
+
+  # Postgres Database
+  db:
+    image: postgres:15-alpine
+    container_name: ctd-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ctd_user
+      - POSTGRES_PASSWORD=ctd_password
+      - POSTGRES_DB=crypto_tower_defense
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ctd-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ctd_user -d crypto_tower_defense" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  ctd-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

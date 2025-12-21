@@ -1,0 +1,24 @@
+{
+  "name": "crypto-tower-defense-client",
+  "version": "1.0.0",
+  "description": "Crypto Tower Defense Game Client",
+  "main": "index.html",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "game",
+    "tower-defense",
+    "crypto",
+    "web3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

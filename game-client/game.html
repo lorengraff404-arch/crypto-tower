@@ -1,0 +1,3516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - Game Hub</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/abilities.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            margin: 0 0 5px 0;
+            color: white;
+        }
+
+        .wallet-display {
+            opacity: 0.9;
+            font-size: 14px;
+            color: white;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .balance-item {
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+        }
+
+        .balance-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+            color: white;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Quick Actions Bar */
+        .quick-actions {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .quick-actions-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        /* Characters Grid */
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        /* Character Card */
+        .character-card {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .character-card.selected {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3), 0 20px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 10;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+        }
+
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .char-emoji {
+            font-size: 64px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+        }
+
+        .char-info h3 {
+            font-size: 22px;
+            margin: 0 0 12px 0;
+            color: #f1f5f9;
+        }
+
+        .char-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 20px 0;
+            padding: 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .stat-value {
+            color: #f1f5f9;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .view-abilities-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .view-abilities-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .sell-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .sell-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .cancel-listing-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .cancel-listing-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+            border: none;
+            font-size: 28px;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.8);
+        }
+
+        .fab-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+        }
+
+        .fab:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Battle Modal */
+        /* Premium Modal Styles */
+        .modal-overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active,
+        .modal-overlay[style*="display: flex"] {
+            display: flex !important;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            border-radius: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px 30px;
+            border-radius: 22px 22px 0 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-body {
+            padding: 30px;
+            color: #e2e8f0;
+        }
+
+        .selected-team {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .selected-team-title {
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .selected-team-chars {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .selected-team-char {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #10b981;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bet-input-group {
+            margin-bottom: 24px;
+        }
+
+        .bet-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #f1f5f9;
+        }
+
+        .bet-input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #334155;
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .bet-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .modal-btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .modal-btn-secondary {
+            background: rgba(100, 116, 139, 0.2);
+            color: #f1f5f9;
+            border: 2px solid #334155;
+        }
+
+        .modal-btn-secondary:hover {
+            background: rgba(100, 116, 139, 0.3);
+        }
+
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .characters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fab {
+                width: 56px;
+                height: 56px;
+                bottom: 24px;
+                right: 24px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
+            <div class="header-title">
+                <h1>🏰 Crypto Tower Defense</h1>
+                <p class="wallet-display" id="walletDisplay"></p>
+            </div>
+            <div class="header-info">
+                <div class="balance-item">
+                    <div class="balance-label">GTK Balance</div>
+                    <div class="balance-value">💰 <span id="gtkBalance">0</span></div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">TOWER Balance</div>
+                    <div class="balance-value">🏆 <span id="towerBalance">0</span></div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="quick-actions-container">
+            <button class="action-btn action-btn-success" onclick="window.location.href='create-character.html'">
+                ✨ Create Character
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='type-chart.html'"
+                style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">
+                📊 Type Chart
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='teams.html'"
+                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                👥 My Team
+            </button>
+            <button class="action-btn action-btn-primary" onclick="window.location.href='island-raids.html'"
+                style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+                🌋 Island Raids
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='breeding.html'"
+                style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                🥚 Breeding
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='marketplace.html'"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                🏪 Marketplace
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='daily-quests.html'"
+                style="background: linear-gradient(135deg, #10b981, #059669);">
+                🎯 Daily Quests
+            </button>
+            <button class="action-btn action-btn-success" id="mintCharacterBtn" style="grid-column: span 2;">
+                ✨ Mint Character
+            </button>
+
+            <button class="action-btn" id="swapTokensBtn"
+                style="grid-column: span 2; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000;">
+                🔄 Swap Tokens (TOWER ↔ GTK)
+            </button>
+            <button class="action-btn action-btn-success" id="shopBtn"
+                style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                🛒 Shop
+            </button>
+            <button class="action-btn action-btn-success" id="inventoryBtn"
+                style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                🎒 Inventory
+            </button>
+            <button class="action-btn action-btn-success" id="myEggsBtn"
+                style="background: linear-gradient(135deg, #facc15, #eab308);">
+                🥚 My Eggs
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="section-title">🎮 My Characters</h1>
+        <p class="section-subtitle">Click to select characters for battle (max 3)</p>
+
+        <div id="loading" class="loading">
+            <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+            <p>Loading characters...</p>
+        </div>
+
+        <div id="empty" class="empty-state" style="display: none;">
+            <div class="empty-state-emoji">🥚</div>
+            <h2 style="margin-bottom: 12px; color: #374151;">No characters yet!</h2>
+            <p style="margin-bottom: 24px;">Create your first character to start playing</p>
+            <button class="action-btn action-btn-success" onclick="window.location.href='create-character.html'">
+                ✨ Create Character
+            </button>
+        </div>
+
+        <div id="characters" class="characters-grid"></div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button id="fabBtn" class="fab" style="display: none;" disabled>
+        ⚔️
+        <span id="fabBadge" class="fab-badge">0</span>
+    </button>
+
+    <!-- Battle Modal -->
+    <div id="battleModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>⚔️ Battle Setup</h2>
+            </div>
+            <div class="modal-body">
+                <div class="selected-team">
+                    <div class="selected-team-title">Your Team</div>
+                    <div id="selectedTeamDisplay" class="selected-team-chars"></div>
+                </div>
+
+                <div class="bet-input-group">
+                    <label class="bet-label">Bet Amount (TOWER)</label>
+                    <input type="number" id="betAmount" class="bet-input" min="0" value="10"
+                        placeholder="Enter bet amount">
+                </div>
+
+                <div class="modal-actions">
+                    <button id="startBattleBtn" class="modal-btn modal-btn-primary">
+                        ⚔️ Find Opponent
+                    </button>
+                    <button id="cancelBattleBtn" class="modal-btn modal-btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div id="sellModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>💰 Sell Character</h2>
+            </div>
+            <div class="modal-body">
+                <p id="sellCharacterName" style="margin-bottom: 20px; font-size: 18px; font-weight: 600;"></p>
+
+                <div class="bet-input-group">
+                    <label class="bet-label">Price (TOWER Tokens)</label>
+                    <input type="number" id="sellPrice" class="bet-input" min="1" value="1000"
+                        placeholder="Enter price">
+                </div>
+
+                <div class="modal-actions">
+                    <button id="confirmSellBtn" class="modal-btn modal-btn-primary">
+                        List on Marketplace
+                    </button>
+                    <button id="cancelSellBtn" class="modal-btn modal-btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gacha Modals -->
+    <!-- Mint Character Modal -->
+    <div id="mintModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✨ Mint New Character</h2>
+            </div>
+            <div class="modal-body">
+                <div
+                    style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <p>Mint a random character egg! Higher TOWER investment = better odds.</p>
+                    <p><strong>First mint is FREE!</strong> (but 99.9% chance of C rank)</p>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">TOWER Amount:</label>
+                    <input type="number" id="towerAmount" min="0" max="10000" value="0"
+                        style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #667eea; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                    <div style="margin-top: 10px; color: #FFD700; font-weight: bold;">
+                        Your Balance: <span id="userTowerBalance">0</span> TOWER
+                    </div>
+                </div>
+
+                <div id="oddsPreview"
+                    style="margin: 20px 0; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;">Rarity Odds:</h3>
+                    <div id="oddsTable"></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="action-btn" style="background: #64748b;" id="closeMintBtn">Cancel</button>
+                    <button class="action-btn action-btn-success" id="confirmMintBtn">Mint Egg</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Modal -->
+    <div id="shopModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>🛒 Item Shop</h2>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" id="shopTabs">
+                    <button class="tab-btn active" data-category="all">All</button>
+                    <button class="tab-btn" data-category="consumable">Consumables</button>
+                    <button class="tab-btn" data-category="weapon">Weapons</button>
+                    <button class="tab-btn" data-category="armor">Armor</button>
+                    <button class="tab-btn" data-category="currency">Special</button>
+                </div>
+
+                <div
+                    style="text-align: right; font-size: 18px; font-weight: bold; color: #FFD700; margin-bottom: 20px;">
+                    GTK Balance: <span id="shopGTKBalance">0</span>
+                </div>
+
+                <div id="shopItems"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                </div>
+
+                <div class="modal-actions" style="margin-top: 30px;">
+                    <button class="action-btn" style="background: #64748b;" id="closeShopBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventoryModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>🎒 My Inventory</h2>
+                <p style="color: #94a3b8; margin-top: 10px;">Your purchased items</p>
+            </div>
+            <div class="modal-body">
+                <div id="userInventory"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                </div>
+                <div class="modal-actions" style="margin-top: 30px;">
+                    <button class="action-btn" style="background: #64748b;" id="closeInventoryBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Eggs Modal -->
+    <div id="myEggsModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>🥚 My Eggs</h2>
+            </div>
+            <div class="modal-body">
+                <div id="eggsList"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                </div>
+                <div class="modal-actions" style="margin-top: 20px;">
+                    <button class="action-btn" style="background: #64748b;" id="closeEggsBtn">Close</button>
+                </div>
+            </div>
+        </div>
+        <!-- Marketplace Modal -->
+        <div id="marketplaceModal" class="modal-overlay" style="display: none;">
+            <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>🏪 Marketplace</h2>
+                    <p style="color: #94a3b8; margin-top: 10px;">Buy and sell characters with TOWER</p>
+                </div>
+                <div class="modal-body">
+                    <div id="marketplaceGrid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                    </div>
+                    <div id="marketplaceLoading" style="text-align: center; padding: 40px; color: #94a3b8;">Loading...
+                    </div>
+                    <div id="marketplaceEmpty"
+                        style="display: none; text-align: center; padding: 40px; color: #94a3b8;">No listings</div>
+                    <div class="modal-actions" style="margin-top: 30px;">
+                        <button class="action-btn" style="background: #64748b;" id="closeMarketplaceBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .shop-item,
+        .inventory-item,
+        .egg-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .shop-item:hover,
+        .inventory-item:hover,
+        .egg-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .item-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .buy-btn,
+        .use-btn,
+        .hatch-btn,
+        .incubate-btn {
+            width: 100%;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .buy-btn:hover,
+        .use-btn:hover,
+        .hatch-btn:hover,
+        .incubate-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+    </style>
+
+    <!-- Web3.js for blockchain interactions -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <script src="js/wallet.js"></script>
+
+    <!-- Auth System -->
+    <script src="js/auth.js"></script>
+    <script src="js/token-manager.js"></script>
+
+    <script type="module" src="dist/js/game-api.js"></script>
+    <script type="module">
+        import { apiClient } from './dist/js/api.js';
+        import { getTowerBalance, getGTKBalance, watchBalance } from './dist/js/balance.js';
+
+        // Load real balances from blockchain
+        async function loadRealBalances() {
+            const walletAddress = localStorage.getItem('wallet_address');
+            if (!walletAddress) {
+                console.warn('No wallet address found');
+                return;
+            }
+
+            try {
+                // Fetch balances using Web3
+                const towerBalance = await getTowerBalance(walletAddress);
+                const gtkBalance = await getGTKBalance(walletAddress);
+
+                // Update UI
+                const towerStr = towerBalance.toFixed(2);
+                const gtkStr = gtkBalance.toFixed(2);
+
+                const els = {
+                    tower: [
+                        document.getElementById('towerBalance'),     // Header
+                        document.getElementById('userTowerBalance')  // Mint Modal
+                    ],
+                    gtk: [
+                        document.getElementById('gtkBalance'),       // Header
+                        document.getElementById('shopGTKBalance')    // Shop Modal
+                    ]
+                };
+
+                els.tower.forEach(el => { if (el) el.textContent = towerStr; });
+                els.gtk.forEach(el => { if (el) el.textContent = gtkStr; });
+
+                console.log('✅ Balances loaded:', { TOWER: towerBalance, GTK: gtkBalance });
+
+                // Start watching for balance changes every 10 seconds
+                watchBalance(walletAddress, (balances) => {
+                    const t = parseFloat(balances.tower).toFixed(2);
+                    const g = parseFloat(balances.gtk).toFixed(2);
+
+                    els.tower.forEach(el => { if (el) el.textContent = t; });
+                    els.gtk.forEach(el => { if (el) el.textContent = g; });
+                });
+            } catch (error) {
+                console.error('❌ Error loading balances:', error);
+                // Fallback to backend API if Web3 fails
+                try {
+                    const response = await apiClient.get('/users/me');
+                    if (response.data?.user) {
+                        const t = response.data.user.tower_balance || '0.00';
+                        const g = response.data.user.gtk_balance || '0.00';
+
+                        document.getElementById('towerBalance').textContent = t;
+                        document.getElementById('gtkBalance').textContent = g;
+                        document.getElementById('userTowerBalance').textContent = t;
+                        document.getElementById('shopGTKBalance').textContent = g;
+                    }
+                } catch (apiError) {
+                    console.error('❌ Error loading balances from API:', apiError);
+                }
+            }
+        }
+
+        // Load balances when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            // AUTH CHECK - Require authentication
+            if (!await requireAuth()) {
+                return; // requireAuth() handles redirect
+            }
+
+            loadRealBalances();
+        });
+
+        let characters = [];
+        let selectedCharacterIds = [];
+
+        async function loadCharacters() {
+            try {
+                const response = await apiClient.get('/characters');
+                characters = response.characters || [];
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (characters.length === 0) {
+                    document.getElementById('empty').style.display = 'block';
+                    return;
+                }
+
+                renderCharacters();
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ef4444;">
+                        <p>Failed to load characters</p>
+                        <button onclick="location.reload()" class="action-btn action-btn-success" style="margin-top: 16px;">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCharacters() {
+            const container = document.getElementById('characters');
+
+            // Filter out listed characters - they're locked in marketplace
+            const availableCharacters = characters.filter(char => !char.is_listed);
+
+            container.innerHTML = availableCharacters.map(char => {
+                const rarityColor = getRarityColor(char.rarity);
+                const evolutionName = getEvolutionName(char.level);
+                const isSelected = selectedCharacterIds.includes(char.id);
+
+                return `
+                    <div class="character-card ${isSelected ? 'selected' : ''}" data-char-id="${char.id}">
+                        ${isSelected ? '<div class="selected-badge">✓ Selected</div>' : ''}
+                        <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle, ${rarityColor}22 0%, transparent 70%); pointer-events: none;"></div>
+                        
+                        <div class="char-header">
+                            <div class="char-emoji">${getCharacterEmoji(char.character_type)}</div>
+                            <div class="char-info">
+                                <h3>${char.name || `${char.character_type} #${char.id}`}</h3>
+                                <div class="char-badges">
+                                    <span class="badge" style="background: ${rarityColor}; box-shadow: 0 2px 6px ${rarityColor}66;">
+                                        ⭐ ${char.rarity}
+                                    </span>
+                                    <span class="badge" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                        📊 Lvl ${char.level}
+                                    </span>
+                                    <span class="badge" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                                        🌟 ${evolutionName}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Attack</span>
+                                <span class="stat-value">⚔️ ${char.current_attack}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Defense</span>
+                                <span class="stat-value">🛡️ ${char.current_defense}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">HP</span>
+                                <span class="stat-value">❤️ ${char.current_hp}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Speed</span>
+                                <span class="stat-value">⚡ ${char.current_speed}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 16px; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                            <span style="color: #60a5fa; font-size: 13px; font-weight: 600;">
+                                🔮 ${char.class} • ${char.element || 'Fire'} Element
+                            </span>
+                        </div>
+
+                        <a href="character-detail.html?id=${char.id}" class="view-abilities-btn" onclick="event.stopPropagation();">
+                            ⚡ View Abilities & Details
+                        </a>
+                        
+                        ${char.is_listed ? `
+                            <button class="cancel-listing-btn" onclick="event.stopPropagation(); cancelListing(${char.id})">
+                                ❌ Cancel Listing
+                            </button>
+                        ` : `
+                            <button class="sell-btn" onclick="event.stopPropagation(); openSellModal(${char.id}, '${char.name || char.character_type}')">
+                                💰 Sell on Marketplace
+                            </button>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Add click listeners
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'A') return; // Don't toggle if clicking link
+
+                    const charId = parseInt(card.dataset.charId);
+                    toggleCharacterSelection(charId);
+                });
+            });
+        }
+
+        function toggleCharacterSelection(charId) {
+            // Find the character
+            const char = characters.find(c => c.id === charId);
+
+            // Prevent selecting listed characters
+            if (char && char.is_listed) {
+                alert('⚠️ This character is listed on the marketplace and cannot be used in battles!');
+                return;
+            }
+
+            const index = selectedCharacterIds.indexOf(charId);
+
+            if (index > -1) {
+                selectedCharacterIds.splice(index, 1);
+            } else {
+                if (selectedCharacterIds.length >= 3) {
+                    alert('Maximum 3 characters allowed!');
+                    return;
+                }
+                selectedCharacterIds.push(charId);
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update character cards
+            document.querySelectorAll('.character-card').forEach(card => {
+                const charId = parseInt(card.dataset.charId);
+                const isSelected = selectedCharacterIds.includes(charId);
+
+                if (isSelected) {
+                    card.classList.add('selected');
+                    if (!card.querySelector('.selected-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'selected-badge';
+                        badge.textContent = '✓ Selected';
+                        card.insertBefore(badge, card.firstChild);
+                    }
+                } else {
+                    card.classList.remove('selected');
+                    const badge = card.querySelector('.selected-badge');
+                    if (badge) badge.remove();
+                }
+            });
+
+            // Update FAB
+            const fab = document.getElementById('fabBtn');
+            const fabBadge = document.getElementById('fabBadge');
+            fabBadge.textContent = selectedCharacterIds.length;
+
+            if (selectedCharacterIds.length > 0) {
+                fab.style.display = 'flex';
+                fab.disabled = false;
+            } else {
+                fab.style.display = 'none';
+                fab.disabled = true;
+            }
+        }
+
+        // FAB click
+        document.getElementById('fabBtn').addEventListener('click', () => {
+            const selectedChars = characters.filter(c => selectedCharacterIds.includes(c.id));
+            const teamDisplay = document.getElementById('selectedTeamDisplay');
+
+            teamDisplay.innerHTML = selectedChars.map(char => `
+                <div class="selected-team-char">
+                    <span style="font-size: 24px;">${getCharacterEmoji(char.character_type)}</span>
+                    <span style="font-weight: 600;">${char.name || char.character_type}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('battleModal').classList.add('active');
+        });
+
+        // Modal cancel
+        document.getElementById('cancelBattleBtn').addEventListener('click', () => {
+            document.getElementById('battleModal').classList.remove('active');
+        });
+
+        // Start battle
+        document.getElementById('startBattleBtn').addEventListener('click', async () => {
+            try {
+                const betAmount = parseInt(document.getElementById('betAmount').value) || 0;
+                const btn = document.getElementById('startBattleBtn');
+
+                btn.disabled = true;
+                btn.textContent = '🔍 Finding opponent...';
+
+                const battle = await apiClient.post('/battles/matchmaking', {
+                    character_ids: selectedCharacterIds,
+                    bet_amount: betAmount
+                });
+
+                window.location.href = `battle.html?id=${battle.battle_id}`;
+            } catch (error) {
+                alert('Failed to start battle: ' + error.message);
+                document.getElementById('startBattleBtn').disabled = false;
+                document.getElementById('startBattleBtn').textContent = '⚔️ Find Opponent';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+
+        // Sell Modal Functions
+        let selectedCharacterForSale = null;
+
+        window.openSellModal = function (charId, charName) {
+            selectedCharacterForSale = charId;
+            document.getElementById('sellCharacterName').textContent = `Selling: ${charName}`;
+            document.getElementById('sellModal').classList.add('active');
+        };
+
+        document.getElementById('cancelSellBtn').addEventListener('click', () => {
+            document.getElementById('sellModal').classList.remove('active');
+            selectedCharacterForSale = null;
+        });
+
+        document.getElementById('confirmSellBtn').addEventListener('click', async () => {
+            const price = parseInt(document.getElementById('sellPrice').value);
+
+            if (!price || price < 1) {
+                alert('Please enter a valid price');
+                return;
+            }
+
+            try {
+                const response = await apiClient.post('/marketplace/list', {
+                    item_type: 'character',
+                    item_id: selectedCharacterForSale,
+                    price: price,
+                    currency: 'TOWER'
+                });
+
+                if (response.success) {
+                    alert('Character listed on marketplace!');
+                    document.getElementById('sellModal').classList.remove('active');
+                    selectedCharacterForSale = null;
+                    loadCharacters(); // Reload to show updated status
+                }
+            } catch (error) {
+                alert('Failed to list character: ' + error.message);
+            }
+        });
+
+        function getRarityColor(rarity) {
+            const colors = {
+                'SSS': '#FFD700',
+                'SS': '#E535AB',
+                'S': '#9333EA',
+                'A': '#3B82F6',
+                'B': '#10b981',
+                'C': '#6B7280'
+            };
+            return colors[rarity] || colors['C'];
+        }
+
+        function getEvolutionName(level) {
+            if (level >= 75) return 'Ultimate';
+            if (level >= 50) return 'Mature';
+            if (level >= 25) return 'Growth';
+            return 'Base';
+        }
+
+        function getCharacterEmoji(type) {
+            const emojis = {
+                // Character Types
+                'BEAST': '🦁',
+                'DRAGON': '🐉',
+                'INSECT': '🐛',
+                'MINERAL': '💎',
+                'SPIRIT': '👻',
+                'AVIAN': '🦅',
+                'AQUA': '🐠',
+                'FLORA': '🌿',
+                // Legacy support
+                'Dragon': '🐉',
+                'Beast': '🦁',
+                'Plant': '🌿',
+                'Warrior': '⚔️',
+                'Mage': '🔮',
+                'Tank': '🛡️'
+            };
+            return emojis[type] || '✨';
+        }
+
+        function getElementEmoji(element) {
+            const emojis = {
+                'FIRE': '🔥',
+                'WATER': '💧',
+                'ICE': '❄️',
+                'THUNDER': '⚡',
+                'DARK': '🌑',
+                'PLANT': '🌱',
+                'EARTH': '🪨',
+                'WIND': '💨',
+                // Legacy
+                'Fire': '🔥',
+                'Water': '💧',
+                'Ice': '❄️'
+            };
+            return emojis[element] || '✨';
+        }
+
+        // Initialize
+        loadCharacters();
+
+        // ========== GACHA SYSTEM ==========
+
+        // Modal Management
+        const modals = {
+            mint: document.getElementById('mintModal'),
+            shop: document.getElementById('shopModal'),
+            eggs: document.getElementById('myEggsModal')
+        };
+
+        function closeAllModals() {
+            Object.values(modals).forEach(modal => {
+                if (modal) modal.style.display = 'none';
+            });
+        }
+
+        // Close on overlay click
+        Object.values(modals).forEach(modal => {
+            modal?.addEventListener('click', (e) => {
+                if (e.target === modal) closeAllModals();
+            });
+        });
+
+        // Load user balance
+        // Load user balance
+        async function loadUserBalance() {
+            // Load GTK and TOWER balances from blockchain
+            await loadRealBalances();
+        }
+
+        // ===== MINT CHARACTER =====
+        document.getElementById('mintCharacterBtn')?.addEventListener('click', async () => {
+            modals.mint.style.display = 'flex';
+
+            // Fetch real TOWER balance from blockchain
+            const walletAddress = localStorage.getItem('wallet_address');
+            if (walletAddress) {
+                try {
+                    // Import balance module
+                    const { getTowerBalance } = await import('./dist/js/balance.js');
+                    const balance = await getTowerBalance(walletAddress);
+                    document.getElementById('userTowerBalance').textContent = balance.toFixed(2);
+                } catch (error) {
+                    console.error('Error fetching TOWER balance:', error);
+                    document.getElementById('userTowerBalance').textContent = '0.00';
+                }
+            }
+
+            updateOddsPreview();
+        });
+
+        document.getElementById('closeMintBtn')?.addEventListener('click', closeAllModals);
+
+        // Debounce function to prevent too many API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Add input validation and debounced listener
+        const towerInput = document.getElementById('towerAmount');
+        towerInput?.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value) || 0;
+            // Cap at 10000
+            if (value > 10000) {
+                e.target.value = 10000;
+                value = 10000;
+            }
+            // Prevent negative
+            if (value < 0) {
+                e.target.value = 0;
+                value = 0;
+            }
+        });
+
+        towerInput?.addEventListener('input', debounce(updateOddsPreview, 500));
+
+        async function updateOddsPreview() {
+            const amount = document.getElementById('towerAmount')?.value || 0;
+            try {
+                // Add timestamp to prevent caching
+                const response = await apiClient.get(`/gacha/odds/${amount}?t=${Date.now()}`);
+                const odds = response.odds;
+
+                const rarities = ['SSS', 'SS', 'S', 'A', 'B', 'C'];
+                const colors = {
+                    'SSS': 'linear-gradient(135deg, #ff0080, #ff8c00)',
+                    'SS': 'linear-gradient(135deg, #9c27b0, #e91e63)',
+                    'S': 'linear-gradient(135deg, #2196f3, #00bcd4)',
+                    'A': 'linear-gradient(135deg, #4caf50, #8bc34a)',
+                    'B': 'linear-gradient(135deg, #ff9800, #ffc107)',
+                    'C': 'linear-gradient(135deg, #757575, #9e9e9e)'
+                };
+
+                const oddsHTML = rarities.map(rarity => {
+                    const percent = odds[rarity] || 0;
+                    return `
+                        <div style="display: grid; grid-template-columns: 60px 1fr 80px; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-weight: bold; padding: 5px 10px; border-radius: 5px; text-align: center; background: ${colors[rarity]}; font-size: 12px;">${rarity}</span>
+                            <div style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; height: 20px;">
+                                <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: ${percent}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <span style="text-align: right; font-weight: bold; color: #FFD700; font-size: 14px;">${percent.toFixed(2)}%</span>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('oddsTable').innerHTML = oddsHTML;
+            } catch (error) {
+                console.error('Error fetching odds:', error);
+            }
+        }
+
+        document.getElementById('confirmMintBtn')?.addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('towerAmount').value) || 0;
+
+            if (amount < 0) {
+                alert('Invalid amount');
+                return;
+            }
+
+            try {
+                // Show loading state
+                const mintBtn = document.getElementById('confirmMintBtn');
+                const originalText = mintBtn.textContent;
+                mintBtn.disabled = true;
+                mintBtn.textContent = '🔄 Processing...';
+
+                let txHash = null;
+
+                // If amount > 0, require TOWER payment
+                if (amount > 0) {
+                    // Dynamic import for Web3 transfer
+                    const { transferTOWER, waitForTransaction } = await import('./dist/js/tokenTransfer.js?v=' + Date.now());
+
+                    // Transfer TOWER tokens
+                    mintBtn.textContent = '💰 Transferring TOWER...';
+                    txHash = await transferTOWER(amount);
+
+                    // Wait for confirmation
+                    mintBtn.textContent = '⏳ Confirming transaction...';
+                    await waitForTransaction(txHash);
+                }
+
+                // Call backend with tx_hash
+                mintBtn.textContent = '✨ Minting character...';
+                const response = await apiClient.post('/gacha/mint', {
+                    tower_amount: amount,
+                    tx_hash: txHash // null if free mint
+                });
+
+
+                if (response.egg) {
+                    const egg = response.egg;
+
+                    // Get rarity color and gradient
+                    const rarityStyles = {
+                        'SSS': {
+                            color: '#FFD700',
+                            gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                            glow: '0 0 30px rgba(255, 215, 0, 0.5)'
+                        },
+                        'SS': {
+                            color: '#E535AB',
+                            gradient: 'linear-gradient(135deg, #E535AB 0%, #C026D3 100%)',
+                            glow: '0 0 30px rgba(229, 53, 171, 0.5)'
+                        },
+                        'S': {
+                            color: '#9333EA',
+                            gradient: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
+                            glow: '0 0 30px rgba(147, 51, 234, 0.5)'
+                        },
+                        'A': {
+                            color: '#3B82F6',
+                            gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                            glow: '0 0 30px rgba(59, 130, 246, 0.5)'
+                        },
+                        'B': {
+                            color: '#10b981',
+                            gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            glow: '0 0 30px rgba(16, 185, 129, 0.5)'
+                        },
+                        'C': {
+                            color: '#6B7280',
+                            gradient: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
+                            glow: '0 0 30px rgba(107, 114, 128, 0.3)'
+                        }
+                    };
+                    const style = rarityStyles[egg.rarity] || rarityStyles['C'];
+
+                    // Create elegant dark modal content with mystery
+                    const modalContent = `
+    <div style="
+        text-align: center;
+        padding: 34px 22px;
+        border-radius: 22px;
+        background:
+            radial-gradient(900px 420px at 50% -10%, rgba(99, 102, 241, 0.18), rgba(0,0,0,0) 60%),
+            radial-gradient(700px 360px at 10% 110%, rgba(168, 85, 247, 0.14), rgba(0,0,0,0) 55%),
+            linear-gradient(180deg, rgba(2, 6, 23, 0.92), rgba(3, 7, 18, 0.92));
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        box-shadow:
+            0 22px 80px rgba(0, 0, 0, 0.65),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    ">
+        <!-- Subtle sheen -->
+        <div style="
+            position:absolute; inset:-2px;
+            background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.05));
+            opacity: .45;
+            transform: translateX(-40%);
+            animation: premiumSheen 5.5s ease-in-out infinite;
+            pointer-events:none;
+        "></div>
+
+        <!-- Top status pill -->
+        <div style="
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            margin-bottom: 18px;
+        ">
+            <span style="
+                width:10px; height:10px; border-radius:999px;
+                background: ${style.color};
+                box-shadow: ${style.glow};
+                display:inline-block;
+            "></span>
+            <span style="
+                color:#e2e8f0;
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 1.2px;
+                text-transform: uppercase;
+            ">Mint Confirmed</span>
+        </div>
+
+        <!-- Egg emblem -->
+        <div style="position: relative; display: inline-block; margin: 4px 0 18px;">
+            <div style="
+                position:absolute;
+                inset:-26px;
+                border-radius: 999px;
+                background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.10), rgba(255,255,255,0) 60%),
+                            radial-gradient(circle at 50% 50%, rgba(99,102,241,0.25), rgba(168,85,247,0.12), rgba(0,0,0,0) 70%);
+                filter: blur(1px);
+                opacity: .95;
+                animation: auraPulse 2.6s ease-in-out infinite;
+                pointer-events:none;
+            "></div>
+
+            <div style="
+                font-size: 92px;
+                line-height: 1;
+                animation: premiumFloat 2.2s ease-in-out infinite;
+                filter: drop-shadow(${style.glow});
+                position: relative;
+            ">🥚</div>
+        </div>
+
+        <!-- Title -->
+        <h2 style="
+            margin: 0 0 8px 0;
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: -0.6px;
+            background: ${style.gradient};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: ${style.glow};
+        ">
+            ${egg.rarity} Rank Egg
+        </h2>
+
+        <p style="
+            color: rgba(148, 163, 184, 0.92);
+            margin: 0 0 26px 0;
+            font-size: 15px;
+            font-weight: 600;
+        ">
+            Successfully minted and sealed with hidden power.
+        </p>
+
+        <!-- Premium card -->
+        <div style="
+            border-radius: 18px;
+            background:
+                linear-gradient(145deg, rgba(15, 23, 42, 0.70), rgba(2, 6, 23, 0.72));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow:
+                0 18px 55px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 22px;
+            margin-bottom: 18px;
+            position: relative;
+            overflow: hidden;
+        ">
+            <!-- Gradient border glow -->
+            <div style="
+                position:absolute; inset:-1px;
+                border-radius: 18px;
+                padding: 1px;
+                background: ${style.gradient};
+                opacity: 0.22;
+                pointer-events:none;
+                mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+                -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+                mask-composite: exclude;
+                -webkit-mask-composite: xor;
+            "></div>
+
+            <!-- Rarity badge -->
+            <div style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                border-radius: 999px;
+                background: rgba(15, 23, 42, 0.75);
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                box-shadow: ${style.glow};
+                margin-bottom: 18px;
+            ">
+                <span style="font-size: 14px; filter: drop-shadow(${style.glow});">◆</span>
+                <span style="
+                    color: #e2e8f0;
+                    font-weight: 800;
+                    font-size: 13px;
+                    letter-spacing: 0.9px;
+                    text-transform: uppercase;
+                ">${egg.rarity} Tier</span>
+            </div>
+
+            <!-- Hidden traits block -->
+            <div style="
+                text-align: left;
+                background: rgba(2, 6, 23, 0.55);
+                border: 1px solid rgba(148, 163, 184, 0.12);
+                border-radius: 14px;
+                padding: 18px;
+                margin-bottom: 14px;
+            ">
+                <div style="
+                    display:flex; align-items:center; justify-content:space-between;
+                    margin-bottom: 10px;
+                ">
+                    <div style="
+                        color: rgba(148, 163, 184, 0.9);
+                        font-size: 12px;
+                        font-weight: 800;
+                        letter-spacing: 1.1px;
+                        text-transform: uppercase;
+                    ">Hidden Traits</div>
+                    <div style="
+                        color: rgba(100, 116, 139, 0.95);
+                        font-size: 12px;
+                        font-weight: 700;
+                        display:flex; align-items:center; gap:6px;
+                    "><span style="opacity:.9;">🔒</span> Sealed</div>
+                </div>
+
+                <div style="color: rgba(203, 213, 225, 0.92); font-size: 14px; line-height: 1.65;">
+                    Element, Type, Class & Stats are concealed.<br/>
+                    <span style="color: rgba(148, 163, 184, 0.95);">
+                        Use a <strong style="color:${style.color}; text-shadow:${style.glow};">Scan Item</strong> to reveal.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Incubation row -->
+            <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap: 14px;
+                padding: 14px 16px;
+                border-radius: 14px;
+                background: rgba(59, 130, 246, 0.08);
+                border: 1px solid rgba(59, 130, 246, 0.18);
+            ">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size: 22px; filter: drop-shadow(${style.glow});">⏱️</span>
+                    <div style="text-align:left;">
+                        <div style="
+                            color: rgba(148, 163, 184, 0.9);
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 0.9px;
+                            text-transform: uppercase;
+                        ">Incubation Time</div>
+                        <div style="
+                            color: #60a5fa;
+                            font-weight: 900;
+                            font-size: 18px;
+                            letter-spacing: -0.2px;
+                        ">${egg.incubation_time} Hours</div>
+                    </div>
+                </div>
+
+                <div style="
+                    padding: 8px 12px;
+                    border-radius: 999px;
+                    background: rgba(15, 23, 42, 0.55);
+                    border: 1px solid rgba(148, 163, 184, 0.14);
+                    color: rgba(226, 232, 240, 0.9);
+                    font-size: 12px;
+                    font-weight: 800;
+                    letter-spacing: 0.6px;
+                    text-transform: uppercase;
+                ">Ready</div>
+            </div>
+        </div>
+
+        <!-- Next steps -->
+        <div style="
+            text-align:left;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.10), rgba(168,85,247,0.08));
+            border: 1px solid rgba(99,102,241,0.22);
+            padding: 18px 18px;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+        ">
+            <div style="
+                color: #e2e8f0;
+                font-size: 13px;
+                font-weight: 900;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                margin-bottom: 8px;
+            ">Next Steps</div>
+            <div style="color: rgba(226, 232, 240, 0.88); font-size: 14px; line-height: 1.6;">
+                Open <strong style="color:#ffffff;">My Eggs</strong> to start incubation, or use items to reveal concealed traits.
+            </div>
+        </div>
+
+        <div style="
+            margin-top: 16px;
+            color: rgba(71, 85, 105, 0.95);
+            font-size: 12px;
+            font-style: italic;
+        ">
+            Egg ID: #${egg.id}
+        </div>
+    </div>
+
+    <style>
+        @keyframes premiumFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+        @keyframes auraPulse {
+            0%, 100% { transform: scale(1); opacity: .85; }
+            50% { transform: scale(1.06); opacity: 1; }
+        }
+        @keyframes premiumSheen {
+            0%   { transform: translateX(-55%) rotate(0.001deg); opacity: .20; }
+            45%  { opacity: .55; }
+            100% { transform: translateX(55%)  rotate(0.001deg); opacity: .22; }
+        }
+    </style>
+`;
+                    showGameModal('', modalContent, 'success');
+                    closeAllModals();
+
+                    // Reload balance from blockchain
+                    await loadRealBalances();
+                    loadCharacters();
+                }
+            } catch (error) {
+                console.error('Mint error:', error);
+
+                // Handle user cancellation gracefully
+                if (error.message?.includes('User denied') || error.message?.includes('user rejected')) {
+                    showGameNotification('Transaction cancelled', 'warning');
+                } else {
+                    const errorMsg = error.message || 'Unknown error occurred';
+                    showGameModal('Mint Failed', `Unable to mint egg:\n\n${errorMsg}`, 'error');
+                }
+            } finally {
+                // Reset button
+                const mintBtn = document.getElementById('confirmMintBtn');
+                mintBtn.disabled = false;
+                mintBtn.textContent = 'Mint Egg';
+            }
+        });
+
+        // ===== SHOP =====
+        document.getElementById('shopBtn')?.addEventListener('click', async () => {
+            modals.shop.style.display = 'flex';
+            await loadUserBalance();
+            await loadShopItems('all');
+        });
+
+        // SWAP TOKENS NAVIGATION
+        document.getElementById('swapTokensBtn')?.addEventListener('click', () => {
+            window.location.href = 'swap.html';
+        });
+
+        document.getElementById('closeShopBtn')?.addEventListener('click', closeAllModals);
+
+        // Inventory button
+        document.getElementById('inventoryBtn')?.addEventListener('click', async () => {
+            modals.inventory = document.getElementById('inventoryModal');
+            modals.inventory.style.display = 'flex';
+            await loadUserInventory();
+        });
+
+        document.getElementById('closeInventoryBtn')?.addEventListener('click', closeAllModals);
+
+        // Shop tabs
+        document.getElementById('shopTabs')?.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                loadShopItems(e.target.dataset.category);
+            }
+        });
+
+        async function loadShopItems(category) {
+            try {
+                const endpoint = category === 'all' ? '/shop/items' : `/shop/items/${category}`;
+                const response = await apiClient.get(endpoint);
+                const items = response.items || [];
+
+                const shopGrid = document.getElementById('shopItems');
+
+                if (items.length === 0) {
+                    shopGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No items available in this category.</p>';
+                    return;
+                }
+
+                shopGrid.innerHTML = items.map(item => `
+                    <div class="shop-item">
+                        <div class="item-icon">🎁</div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">${item.name}</div>
+                        <div style="font-size: 12px; color: #aaa; margin-bottom: 10px; min-height: 40px;">${item.description}</div>
+                        <div style="color: #FFD700; font-weight: bold; margin-bottom: 10px;">${item.gtk_cost} GTK</div>
+                        <button class="buy-btn" data-item-id="${item.id}" data-item-name="${item.name}" data-item-cost="${item.gtk_cost}">Buy</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading shop items:', error);
+            }
+        }
+
+        // Buy item logic with Premium Dark Modal
+        document.getElementById('shopItems')?.addEventListener('click', (e) => {
+            if (e.target.classList.contains('buy-btn')) {
+                const item = {
+                    id: parseInt(e.target.dataset.itemId),
+                    name: e.target.dataset.itemName,
+                    cost: parseInt(e.target.dataset.itemCost)
+                };
+                showBuyInputModal(item);
+            }
+        });
+
+        function showBuyInputModal(item) {
+            const existingModal = document.getElementById('buyModal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'buyModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 10000; animation: fadeIn 0.3s ease;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+                    border: 2px solid rgba(148, 163, 184, 0.2);
+                    border-radius: 20px;
+                    padding: 30px;
+                    width: 90%; max-width: 400px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    text-align: center;
+                    animation: modalSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                ">
+                    <!-- Icon -->
+                    <div style="
+                        width: 80px; height: 80px; margin: 0 auto 20px;
+                        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                        box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+                        font-size: 40px;
+                    ">🎁</div>
+
+                    <h3 style="color: white; margin: 0 0 5px 0; font-size: 24px;">${item.name}</h3>
+                    <p style="color: #94a3b8; margin: 0 0 25px 0;">Purchase Confirmation</p>
+
+                    <!-- Cost Calculation -->
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #cbd5e1;">
+                            <span>Price per item:</span>
+                            <span style="color: #fbbf24; font-weight: bold;">${item.cost} GTK</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: #cbd5e1;">Quantity:</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button id="decQty" style="background: #334155; border: none; color: white; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">-</button>
+                                <input type="number" id="buyQty" value="1" min="1" max="99" style="
+                                    background: #0f172a; border: 1px solid #334155; color: white;
+                                    width: 50px; text-align: center; border-radius: 8px; padding: 4px;
+                                    font-weight: bold; font-size: 16px; outline: none;
+                                ">
+                                <button id="incQty" style="background: #334155; border: none; color: white; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;">+</button>
+                            </div>
+                        </div>
+                        <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: white; font-weight: bold;">Total Cost:</span>
+                            <span id="totalCost" style="color: #fbbf24; font-size: 20px; font-weight: 800; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);">${item.cost} GTK</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <button id="cancelBuyBtn" style="
+                            background: transparent; border: 1px solid #475569; color: #cbd5e1;
+                            padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;
+                            transition: all 0.2s;
+                        ">Cancel</button>
+                        <button id="confirmBuyBtn" style="
+                            background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+                            border: none; color: white; padding: 12px; border-radius: 10px;
+                            font-weight: 700; cursor: pointer;
+                            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+                            transition: all 0.2s;
+                        ">Confirm Buy</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Logic
+            const qtyInput = document.getElementById('buyQty');
+            const totalCostEl = document.getElementById('totalCost');
+            const incBtn = document.getElementById('incQty');
+            const decBtn = document.getElementById('decQty');
+
+            const updateTotal = () => {
+                let val = parseInt(qtyInput.value) || 1;
+                if (val < 1) val = 1; if (val > 99) val = 99;
+                qtyInput.value = val;
+                totalCostEl.textContent = `${val * item.cost} GTK`;
+            };
+
+            incBtn.onclick = () => { qtyInput.value = parseInt(qtyInput.value) + 1; updateTotal(); };
+            decBtn.onclick = () => { qtyInput.value = parseInt(qtyInput.value) - 1; updateTotal(); };
+            qtyInput.oninput = updateTotal;
+
+            document.getElementById('cancelBuyBtn').onclick = () => modal.remove();
+
+            document.getElementById('confirmBuyBtn').onclick = async () => {
+                const qty = parseInt(qtyInput.value);
+                const btn = document.getElementById('confirmBuyBtn');
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+
+                try {
+                    // ===== DEBUG LOGGING =====
+                    console.log('🛒 === PURCHASE DEBUG START ===');
+                    console.log('📦 Item:', item.name, '| Qty:', qty, '| Cost:', item.cost * qty);
+
+                    // Check wallet address from localStorage
+                    const storedWallet = localStorage.getItem('wallet_address');
+                    console.log('💾 Stored wallet address:', storedWallet);
+
+                    // Check if MetaMask is available
+                    console.log('🦊 MetaMask available:', typeof window.ethereum !== 'undefined');
+
+                    // Check current accounts (before requesting)
+                    if (window.ethereum) {
+                        try {
+                            const currentAccounts = await window.ethereum.request({ method: 'eth_accounts' });
+                            console.log('👛 Current accounts (before request):', currentAccounts);
+                            if (currentAccounts.length === 0) {
+                                console.warn('⚠️ No accounts connected - will request connection');
+                            }
+                        } catch (err) {
+                            console.error('❌ Error checking current accounts:', err);
+                        }
+                    }
+                    console.log('🛒 === END DEBUG ===');
+                    // ===== END DEBUG =====
+
+                    // Transfer GTK to treasury wallet
+                    const totalCost = item.cost * qty;
+                    let txHash = null;
+
+                    btn.textContent = 'Transferring GTK...';
+                    const { transferGTK } = await import('./dist/js/tokenTransfer.js?v=' + Date.now());
+                    txHash = await transferGTK(totalCost);
+
+                    // Call backend with transaction hash
+                    btn.textContent = 'Completing purchase...';
+                    const response = await apiClient.post('/shop/buy', {
+                        item_id: item.id,
+                        quantity: qty,
+                        tx_hash: txHash
+                    });
+
+                    modal.remove();
+
+                    if (response.success) {
+                        // Success Modal - Premium Dark
+                        const successContent = `
+                            <div style="
+                                background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+                                border: 2px solid rgba(16, 185, 129, 0.2);
+                                border-radius: 20px;
+                                padding: 30px;
+                                text-align: center;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                            ">
+                                <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 1s infinite;">✅</div>
+                                <h2 style="color: white; margin-bottom: 10px;">Purchase Successful!</h2>
+                                <p style="color: #cbd5e1; margin-bottom: 20px;">
+                                    You bought <strong style="color: #fbbf24;">${qty}x ${item.name}</strong><br>
+                                    for <strong style="color: #fbbf24;">${item.cost * qty} GTK</strong>
+                                </p>
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                                    <p style="margin: 0; color: #94a3b8; font-size: 13px;">Item has been added to your inventory.</p>
+                                </div>
+                            </div>
+                        `;
+                        showGameModal('', successContent, 'success');
+
+                        await loadUserBalance();
+                        await loadUserInventory();
+                    }
+                } catch (error) {
+                    modal.remove();
+
+                    // Handle user cancellation
+                    if (error.message?.includes('User denied') || error.message?.includes('user rejected')) {
+                        showGameNotification('Transaction cancelled', 'warning');
+                        return;
+                    }
+
+                    const errorMsg = error.response?.data?.error || error.message;
+                    // Error Modal - Premium Dark
+                    const errorContent = `
+                        <div style="
+                            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+                            border: 2px solid rgba(239, 68, 68, 0.2);
+                            border-radius: 20px;
+                            padding: 30px;
+                            text-align: center;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                        ">
+                            <div style="font-size: 50px; margin-bottom: 15px;">❌</div>
+                            <h3 style="color: #ef4444; margin-bottom: 10px;">Purchase Failed</h3>
+                            <p style="color: #cbd5e1;">${errorMsg}</p>
+                        </div>
+                    `;
+                    showGameModal('', errorContent, 'error');
+                }
+            };
+        }
+
+        async function loadUserInventory() {
+            try {
+                const response = await apiClient.get('/shop/inventory');
+                const inventory = response.inventory || [];
+
+                const inventoryGrid = document.getElementById('userInventory');
+
+                if (inventory.length === 0) {
+                    inventoryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Your inventory is empty. Purchase items from the shop above!</p>';
+                    return;
+                }
+
+                // Group items by category
+                const grouped = {};
+                inventory.forEach(inv => {
+                    console.log('📦 Inventory item:', inv); // Debug
+                    const category = inv.item?.category || 'other';
+                    if (!grouped[category]) grouped[category] = [];
+                    grouped[category].push(inv);
+                });
+
+                // Category icons and names
+                const categoryInfo = {
+                    healing: { icon: '💊', name: 'Healing Items' },
+                    status: { icon: '🌟', name: 'Status Items' },
+                    pp: { icon: '⚡', name: 'PP Recovery' },
+                    battle: { icon: '⚔️', name: 'Battle Items' },
+                    egg: { icon: '🥚', name: 'Egg Items' },
+                    other: { icon: '📦', name: 'Other Items' }
+                };
+
+                // Item type icons
+                const itemIcons = {
+                    heal_hp: '💊',
+                    heal_full_hp: '💉',
+                    cure_poison: '🟣',
+                    cure_burn: '🔥',
+                    cure_freeze: '❄️',
+                    cure_paralysis: '⚡',
+                    cure_sleep: '😴',
+                    cure_all_status: '✨',
+                    revive: '💫',
+                    buff_attack: '⚔️',
+                    buff_defense: '🛡️',
+                    buff_speed: '💨',
+                    buff_guard: '🔰',
+                    buff_critical: '💥',
+                    accelerate: '⏩',
+                    reveal_stats: '🔍',
+                    instant_hatch: '⚡',
+                    scan: '🔍'
+                };
+
+                let html = '';
+                for (const [category, items] of Object.entries(grouped)) {
+                    const catInfo = categoryInfo[category] || categoryInfo.other;
+                    html += `
+                        <div style="grid-column: 1/-1; margin-top: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin: 0; color: #FFD700; font-size: 16px;">
+                                ${catInfo.icon} ${catInfo.name}
+                            </h4>
+                        </div>
+                    `;
+
+                    items.forEach(inv => {
+                        const item = inv.item;
+                        const icon = itemIcons[item.effect_type] || '📦';
+                        const isEggItem = category === 'egg';
+
+                        html += `
+                            <div class="inventory-item" style="
+                                background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+                                border: 1px solid rgba(255,215,0,0.2);
+                                border-radius: 12px;
+                                padding: 15px;
+                                text-align: center;
+                                transition: all 0.3s ease;
+                                cursor: pointer;
+                            " onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='rgba(255,215,0,0.5)'"
+                               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,215,0,0.2)'">
+                                <div style="font-size: 40px; margin-bottom: 10px;">${icon}</div>
+                                <div style="font-weight: bold; margin-bottom: 5px; color: #FFD700;">${item.name}</div>
+                                <div style="margin-bottom: 5px; color: #94a3b8; font-size: 12px;">${item.description || ''}</div>
+                                <div style="margin-bottom: 10px; color: #64748b; font-size: 14px;">Quantity: <span style="color: #FFD700; font-weight: bold;">${inv.quantity}</span></div>
+                                <button class="use-btn action-btn" 
+                                    data-item-id="${item.id}" 
+                                    data-item-name="${item.name}"
+                                    data-item-category="${category}"
+                                    data-item-effect="${item.effect_type}"
+                                    style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); padding: 8px 16px;">
+                                    ${isEggItem ? '🥚 Use on Egg' : '🎯 Use on Character'}
+                                </button>
+                            </div>
+                        `;
+                    });
+                }
+
+                inventoryGrid.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                document.getElementById('userInventory').innerHTML =
+                    '<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load inventory. Please try again.</p>';
+            }
+        }
+
+        // Use item - Smart modal selection based on category
+        document.getElementById('userInventory')?.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('use-btn')) {
+                const itemId = parseInt(e.target.dataset.itemId);
+                const itemName = e.target.dataset.itemName;
+                const category = e.target.dataset.itemCategory;
+                const effectType = e.target.dataset.itemEffect;
+
+                if (category === 'egg') {
+                    // Show egg selector
+                    await showEggSelectorModal(itemId, itemName, effectType);
+                } else {
+                    // Show character selector
+                    await showCharacterSelectorModal(itemId, itemName);
+                }
+            }
+        });
+
+        // Show egg selector modal
+        async function showEggSelectorModal(itemId, itemName, effectType) {
+            try {
+                const response = await apiClient.get('/gacha/my-eggs');
+                const eggs = response.eggs || [];
+
+                if (eggs.length === 0) {
+                    showNotification('❌ You have no eggs! Mint an egg first.', 'error');
+                    return;
+                }
+
+                const modal = document.createElement('div');
+                modal.id = 'eggSelectorModal';
+                modal.className = 'modal-overlay';
+                modal.style.display = 'flex';
+                modal.style.zIndex = '10001';
+
+                modal.innerHTML = `
+                    <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2>🥚 Select an Egg</h2>
+                            <p style="color: #94a3b8; margin-top: 10px;">Choose an egg to use ${itemName}</p>
+                        </div>
+                        <div class="modal-body">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                                ${eggs.map(egg => `
+                                    <div class="egg-card" style="
+                                        background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+                                        border: 2px solid rgba(255,215,0,0.3);
+                                        border-radius: 12px;
+                                        padding: 15px;
+                                        text-align: center;
+                                        cursor: pointer;
+                                        transition: all 0.3s ease;
+                                    " onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='rgba(255,215,0,0.6)'"
+                                       onmouseout="this.style.transform='scale(1)'; this.style.borderColor='rgba(255,215,0,0.3)'"
+                                       onclick="applyItemToEgg(${itemId}, ${egg.id}, '${itemName}', '${effectType}')">
+                                        <div style="font-size: 50px; margin-bottom: 10px;">🥚</div>
+                                        <div style="font-weight: bold; color: #FFD700; margin-bottom: 5px;">${egg.rarity} Egg</div>
+                                        <div style="color: #64748b; font-size: 12px; margin-bottom: 5px;">Egg #${egg.id}</div>
+                                        ${egg.incubation_started_at ?
+                        `<div style="color: #10b981; font-size: 12px; margin-top: 5px;">⏳ Incubating</div>` :
+                        `<div style="color: #64748b; font-size: 12px; margin-top: 5px;">Not started</div>`
+                    }
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="modal-actions" style="margin-top: 20px;">
+                                <button class="action-btn" style="background: #64748b;" onclick="document.getElementById('eggSelectorModal').remove()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading eggs:', error);
+                showNotification('❌ Failed to load eggs', 'error');
+            }
+        }
+
+        // Apply item to egg
+        window.applyItemToEgg = async function (itemId, eggId, itemName, effectType) {
+            try {
+                let response;
+
+                if (effectType === 'accelerate') {
+                    // Apply accelerator (Basic Nest, Advanced Incubator, Solar Heat Lamp)
+                    response = await apiClient.post('/gacha/apply-accelerator', {
+                        egg_id: eggId,
+                        item_id: itemId
+                    });
+                    showNotification(`✅ Accelerator applied! Incubation time reduced.`, 'success');
+                } else if (effectType === 'reveal_stats' || effectType === 'scan') {
+                    // Scan egg stats (Egg Scanner)
+                    response = await apiClient.post(`/gacha/scan-egg/${eggId}`);
+                    const stats = response.stats;
+                    showEggStatsModal(stats, eggId);
+                } else if (effectType === 'instant_hatch') {
+                    // Instant hatch (Instant Hatch Serum)
+                    response = await apiClient.post(`/gacha/hatch/${eggId}`);
+                    if (response.success) {
+                        const char = response.character;
+                        showNotification(`🎉 Egg hatched instantly!`, 'success');
+                        showEggHatchedModal(char);
+                        await loadMyEggs();
+                    }
+                } else {
+                    showNotification(`❌ Unknown item type: ${effectType}`, 'error');
+                    return;
+                }
+
+                document.getElementById('eggSelectorModal')?.remove();
+                await loadUserInventory();
+
+            } catch (error) {
+                console.error('Error applying item:', error);
+                showNotification('❌ ' + (error.response?.data?.error || error.message), 'error');
+            }
+        };
+
+        // Premium Egg Stats Modal (for scanner)
+        function showEggStatsModal(stats, eggId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            modal.style.zIndex = '10002';
+            modal.style.animation = 'fadeIn 0.3s ease';
+
+            modal.innerHTML = `
+                <div class="modal" style="
+                    max-width: 500px;
+                    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98));
+                    border: 2px solid rgba(139,92,246,0.5);
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 100px rgba(139,92,246,0.3);
+                    animation: slideInScale 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                ">
+                    <!-- Header -->
+                    <div style="
+                        text-align: center;
+                        padding: 30px 20px 20px;
+                        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                        border-radius: 12px 12px 0 0;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+                            background-size: 20px 20px;
+                            opacity: 0.3;
+                        "></div>
+                        <div style="font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🔍</div>
+                        <h2 style="
+                            margin: 0;
+                            font-size: 28px;
+                            color: #fff;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                            font-weight: 800;
+                        ">EGG SCANNED!</h2>
+                        <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Egg #${eggId} - Hidden Stats Revealed</p>
+                    </div>
+
+                    <!-- Stats Display -->
+                    <div class="modal-body" style="padding: 30px;">
+                        <div style="
+                            background: linear-gradient(135deg, rgba(30,41,59,0.5), rgba(15,23,42,0.5));
+                            padding: 25px;
+                            border-radius: 12px;
+                            border: 1px solid rgba(139,92,246,0.3);
+                        ">
+                            <h3 style="margin: 0 0 20px 0; color: #8b5cf6; text-align: center; font-size: 16px;">📊 BASE STATS</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <!-- HP -->
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.15));
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid rgba(239,68,68,0.4);
+                                    text-align: center;
+                                ">
+                                    <div style="font-size: 30px; margin-bottom: 5px;">❤️</div>
+                                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">HP</div>
+                                    <div style="color: #fff; font-size: 24px; font-weight: bold;">${stats.hp}</div>
+                                </div>
+                                <!-- ATK -->
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.15));
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid rgba(245,158,11,0.4);
+                                    text-align: center;
+                                ">
+                                    <div style="font-size: 30px; margin-bottom: 5px;">⚔️</div>
+                                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">ATK</div>
+                                    <div style="color: #fff; font-size: 24px; font-weight: bold;">${stats.atk}</div>
+                                </div>
+                                <!-- DEF -->
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.15));
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid rgba(59,130,246,0.4);
+                                    text-align: center;
+                                ">
+                                    <div style="font-size: 30px; margin-bottom: 5px;">🛡️</div>
+                                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">DEF</div>
+                                    <div style="color: #fff; font-size: 24px; font-weight: bold;">${stats.def}</div>
+                                </div>
+                                <!-- SPD -->
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.15));
+                                    padding: 15px;
+                                    border-radius: 10px;
+                                    border: 1px solid rgba(16,185,129,0.4);
+                                    text-align: center;
+                                ">
+                                    <div style="font-size: 30px; margin-bottom: 5px;">💨</div>
+                                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 5px;">SPD</div>
+                                    <div style="color: #fff; font-size: 24px; font-weight: bold;">${stats.spd}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Note -->
+                        <div style="
+                            margin-top: 20px;
+                            padding: 15px;
+                            background: rgba(139,92,246,0.1);
+                            border-left: 3px solid #8b5cf6;
+                            border-radius: 6px;
+                        ">
+                            <p style="margin: 0; color: #94a3b8; font-size: 13px; line-height: 1.5;">
+                                💡 <strong style="color: #8b5cf6;">Tip:</strong> These are the base stats your character will have when this egg hatches!
+                            </p>
+                        </div>
+
+                        <!-- Close Button -->
+                        <div style="text-align: center; margin-top: 25px;">
+                            <button onclick="this.closest('.modal-overlay').remove()" style="
+                                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                                color: #fff;
+                                border: none;
+                                padding: 12px 35px;
+                                border-radius: 10px;
+                                font-size: 16px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 15px rgba(139,92,246,0.4);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(139,92,246,0.6)'"
+                               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(139,92,246,0.4)'">
+                                ✅ Got it!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        // Show character selector modal
+        async function showCharacterSelectorModal(itemId, itemName) {
+            try {
+                const response = await apiClient.get('/characters');
+                const characters = response.characters || [];
+
+                if (characters.length === 0) {
+                    showNotification('❌ You have no characters! Hatch an egg first.', 'error');
+                    return;
+                }
+
+                const modal = document.createElement('div');
+                modal.id = 'characterSelectorModal';
+                modal.className = 'modal-overlay';
+                modal.style.display = 'flex';
+                modal.style.zIndex = '10001';
+
+                modal.innerHTML = `
+                    <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2>🎯 Select a Character</h2>
+                            <p style="color: #94a3b8; margin-top: 10px;">Choose a character to use ${itemName}</p>
+                        </div>
+                        <div class="modal-body">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                                ${characters.map(char => `
+                                    <div class="character-card" style="
+                                        background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+                                        border: 2px solid rgba(255,215,0,0.3);
+                                        border-radius: 12px;
+                                        padding: 15px;
+                                        text-align: center;
+                                        cursor: pointer;
+                                        transition: all 0.3s ease;
+                                    " onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='rgba(255,215,0,0.6)'"
+                                       onmouseout="this.style.transform='scale(1)'; this.style.borderColor='rgba(255,215,0,0.3)'"
+                                       onclick="applyItemToCharacter(${itemId}, ${char.id}, '${itemName}')">
+                                        <div style="font-size: 50px; margin-bottom: 10px;">⚔️</div>
+                                        <div style="font-weight: bold; color: #FFD700; margin-bottom: 5px;">${char.name}</div>
+                                        <div style="color: #94a3b8; font-size: 14px; margin-bottom: 3px;">Lvl ${char.level} ${char.rarity}</div>
+                                        <div style="color: #64748b; font-size: 12px;">${char.element} ${char.class}</div>
+                                        <div style="color: #10b981; font-size: 12px; margin-top: 5px;">HP: ${char.current_hp}/${char.base_hp}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="modal-actions" style="margin-top: 20px;">
+                                <button class="action-btn" style="background: #64748b;" onclick="document.getElementById('characterSelectorModal').remove()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                showNotification('❌ Failed to load characters', 'error');
+            }
+        }
+
+        // Apply item to character
+        window.applyItemToCharacter = async function (itemId, characterId, itemName) {
+            try {
+                const response = await apiClient.post('/shop/use', {
+                    item_id: itemId,
+                    character_id: characterId
+                });
+
+                if (response.success) {
+                    showNotification(`✅ Used ${itemName} successfully!`, 'success');
+                    document.getElementById('characterSelectorModal')?.remove();
+                    await loadUserInventory();
+                }
+            } catch (error) {
+                console.error('Error using item:', error);
+                showNotification('❌ ' + (error.response?.data?.error || error.message), 'error');
+            }
+        };
+
+        // Notification helper
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                info: '#3b82f6'
+            };
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type]};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10002;
+                max-width: 300px;
+                white-space: pre-line;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== MY EGGS =====
+        document.getElementById('myEggsBtn')?.addEventListener('click', async () => {
+            modals.eggs.style.display = 'flex';
+            await loadMyEggs();
+        });
+
+        document.getElementById('closeEggsBtn')?.addEventListener('click', closeAllModals);
+
+        async function loadMyEggs() {
+            try {
+                const response = await apiClient.get('/gacha/my-eggs');
+                const eggs = response.eggs || [];
+
+                const eggsGrid = document.getElementById('eggsList');
+
+                if (eggs.length === 0) {
+                    eggsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">You have no eggs yet. Mint one!</p>';
+                    return;
+                }
+
+                eggsGrid.innerHTML = eggs.map(egg => {
+                    const isHatched = egg.hatched_at !== null;
+                    const isIncubating = egg.incubation_started_at !== null && !isHatched;
+                    const canHatch = isIncubating && isEggReady(egg);
+
+                    let statusHTML = '';
+                    let actionHTML = '';
+
+                    if (isHatched) {
+                        statusHTML = '<div style="color: #4CAF50; font-weight: bold;">✅ Hatched</div>';
+                    } else if (canHatch) {
+                        statusHTML = '<div style="color: #4CAF50; font-weight: bold; animation: pulse 1s infinite;">🎉 Ready to Hatch!</div>';
+                        actionHTML = `<button class="hatch-btn" data-egg-id="${egg.id}">Hatch Now!</button>`;
+                    } else if (isIncubating) {
+                        const remaining = getRemainingTime(egg);
+                        statusHTML = `<div style="color: #FF9800; font-weight: bold;">⏱️ ${remaining}</div>`;
+                    } else {
+                        statusHTML = '<div style="color: #64748b;">🥚 Not Incubating</div>';
+                        actionHTML = `<button class="incubate-btn" data-egg-id="${egg.id}">Start Incubation</button>`;
+                    }
+
+                    const eggCard = `
+                        <div class="egg-card" style="
+                            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+                            border: 2px solid rgba(148, 163, 184, 0.2);
+                            border-radius: 16px;
+                            padding: 20px;
+                            margin-bottom: 15px;
+                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+                            transition: transform 0.2s, box-shadow 0.2s;
+                        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0, 0, 0, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.3)';">
+                            <!-- Egg Icon and Status -->
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="font-size: 48px; filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.3));">🥚</div>
+                                <div style="flex: 1;">
+                                    <div style="color: #e2e8f0; font-weight: 700; font-size: 18px; margin-bottom: 5px;">
+                                        Mystery Egg #${egg.id}
+                                    </div>
+                                    <div style="color: #64748b; font-size: 13px;">
+                                        🔒 Traits Concealed
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden Info Card -->
+                            <div style="
+                                background: rgba(15, 23, 42, 0.6);
+                                border: 1px solid rgba(148, 163, 184, 0.1);
+                                border-radius: 10px;
+                                padding: 15px;
+                                margin-bottom: 15px;
+                            ">
+                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Hidden Information
+                                </div>
+                                <div style="color: #cbd5e1; font-size: 13px; line-height: 1.5;">
+                                    Rarity, Element, Type & Class are concealed.<br/>
+                                    <span style="color: #60a5fa;">Use a Scan Item to reveal!</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Incubation Status -->
+                            <div style="
+                                background: rgba(59, 130, 246, 0.1);
+                                border: 1px solid rgba(59, 130, 246, 0.2);
+                                border-radius: 10px;
+                                padding: 12px;
+                                margin-bottom: 15px;
+                            ">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 20px;">⏱️</span>
+                                    <div>
+                                        <div style="color: #64748b; font-size: 11px; text-transform: uppercase;">Incubation</div>
+                                        <div style="color: #3b82f6; font-weight: 600; font-size: 14px;">
+                                            ${egg.incubation_started_at ? 'In Progress' : `${egg.incubation_time}h Required`}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status and Action Buttons -->
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                ${statusHTML}
+                                ${actionHTML}
+                            </div>
+                        </div>
+                    `;
+                    return eggCard;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading eggs:', error);
+            }
+        }
+
+        function isEggReady(egg) {
+            if (!egg.incubation_started_at) return false;
+            const startTime = new Date(egg.incubation_started_at);
+            const now = new Date();
+            const hoursElapsed = (now - startTime) / (1000 * 60 * 60);
+            return hoursElapsed >= egg.effective_incubation_time;
+        }
+
+        function getRemainingTime(egg) {
+            const startTime = new Date(egg.incubation_started_at);
+            const now = new Date();
+            const hoursElapsed = (now - startTime) / (1000 * 60 * 60);
+            const remaining = egg.effective_incubation_time - hoursElapsed;
+
+            if (remaining <= 0) return 'Ready!';
+
+            const hours = Math.floor(remaining);
+            const minutes = Math.floor((remaining - hours) * 60);
+
+            return `${hours}h ${minutes}m`;
+        }
+
+        // Egg actions
+        document.getElementById('eggsList')?.addEventListener('click', async (e) => {
+            const eggId = parseInt(e.target.dataset.eggId);
+
+            if (e.target.classList.contains('incubate-btn')) {
+                try {
+                    const response = await apiClient.post(`/gacha/start-incubation/${eggId}`);
+                    if (response.success) {
+                        alert('✅ Incubation started!');
+                        await loadMyEggs();
+                    }
+                } catch (error) {
+                    alert('Error starting incubation: ' + (error.response?.data?.error || error.message));
+                }
+            } else if (e.target.classList.contains('hatch-btn')) {
+                try {
+                    const response = await apiClient.post(`/gacha/hatch/${eggId}`);
+                    if (response.success) {
+                        const char = response.character;
+                        showEggHatchedModal(char);
+                        await loadMyEggs();
+                        loadCharacters();
+                    }
+                } catch (error) {
+                    showNotification('❌ ' + (error.response?.data?.error || error.message), 'error');
+                }
+            }
+        });
+
+        // Premium Egg Hatched Modal
+        function showEggHatchedModal(character) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            modal.style.zIndex = '10001';
+            modal.style.animation = 'fadeIn 0.3s ease';
+
+            // Rarity colors
+            const rarityColors = {
+                'SSS': 'linear-gradient(135deg, #FFD700, #FFA500)',
+                'SS': 'linear-gradient(135deg, #FF6B6B, #C92A2A)',
+                'S': 'linear-gradient(135deg, #845EF7, #5F3DC4)',
+                'A': 'linear-gradient(135deg, #339AF0, #1C7ED6)',
+                'B': 'linear-gradient(135deg, #51CF66, #37B24D)',
+                'C': 'linear-gradient(135deg, #94A3B8, #64748B)'
+            };
+
+            const rarityColor = rarityColors[character.rarity] || rarityColors['C'];
+
+            modal.innerHTML = `
+                <div class="modal" style="
+                    max-width: 600px;
+                    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98));
+                    border: 2px solid rgba(255,215,0,0.3);
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 100px rgba(255,215,0,0.2);
+                    animation: slideInScale 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                ">
+                    <!-- Celebration Header -->
+                    <div style="
+                        text-align: center;
+                        padding: 30px 20px 20px;
+                        background: ${rarityColor};
+                        border-radius: 12px 12px 0 0;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\"50\" font-size=\"50\">✨</text></svg>') repeat;
+                            opacity: 0.1;
+                            animation: sparkle 20s linear infinite;
+                        "></div>
+                        <div style="font-size: 80px; margin-bottom: 10px; animation: bounce 1s ease infinite;">🥚</div>
+                        <h2 style="
+                            margin: 0;
+                            font-size: 32px;
+                            color: #000;
+                            text-shadow: 2px 2px 4px rgba(255,255,255,0.3);
+                            font-weight: 800;
+                        ">EGG HATCHED!</h2>
+                    </div>
+
+                    <!-- Character Info -->
+                    <div class="modal-body" style="padding: 30px;">
+                        <!-- Character Name -->
+                        <div style="
+                            text-align: center;
+                            margin-bottom: 25px;
+                            padding: 20px;
+                            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.1));
+                            border-radius: 12px;
+                            border: 1px solid rgba(139,92,246,0.3);
+                        ">
+                            <div style="font-size: 28px; font-weight: bold; color: #FFD700; margin-bottom: 5px;">
+                                ${character.unique_name || character.name}
+                            </div>
+                            <div style="
+                                display: inline-block;
+                                padding: 6px 20px;
+                                background: ${rarityColor};
+                                border-radius: 20px;
+                                font-weight: bold;
+                                font-size: 18px;
+                                color: #000;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            ">
+                                ${character.rarity} RANK
+                            </div>
+                        </div>
+
+                        <!-- Character Details -->
+                        <div style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 15px;
+                            margin-bottom: 20px;
+                        ">
+                            <div style="
+                                background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.1));
+                                padding: 15px;
+                                border-radius: 10px;
+                                border: 1px solid rgba(239,68,68,0.3);
+                                text-align: center;
+                            ">
+                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">ELEMENT</div>
+                                <div style="color: #FFD700; font-size: 18px; font-weight: bold;">${character.element}</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.1));
+                                padding: 15px;
+                                border-radius: 10px;
+                                border: 1px solid rgba(59,130,246,0.3);
+                                text-align: center;
+                            ">
+                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">TYPE</div>
+                                <div style="color: #FFD700; font-size: 18px; font-weight: bold;">${character.character_type}</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.1));
+                                padding: 15px;
+                                border-radius: 10px;
+                                border: 1px solid rgba(139,92,246,0.3);
+                                text-align: center;
+                            ">
+                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">CLASS</div>
+                                <div style="color: #FFD700; font-size: 18px; font-weight: bold;">${character.class}</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1));
+                                padding: 15px;
+                                border-radius: 10px;
+                                border: 1px solid rgba(16,185,129,0.3);
+                                text-align: center;
+                            ">
+                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 5px;">LEVEL</div>
+                                <div style="color: #FFD700; font-size: 18px; font-weight: bold;">${character.level}</div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div style="
+                            background: linear-gradient(135deg, rgba(30,41,59,0.5), rgba(15,23,42,0.5));
+                            padding: 20px;
+                            border-radius: 12px;
+                            border: 1px solid rgba(255,215,0,0.2);
+                        ">
+                            <h3 style="margin: 0 0 15px 0; color: #FFD700; text-align: center;">⚡ BASE STATS</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="
+                                        width: 40px;
+                                        height: 40px;
+                                        background: linear-gradient(135deg, #ef4444, #dc2626);
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                    ">❤️</div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 11px;">HP</div>
+                                        <div style="color: #fff; font-size: 18px; font-weight: bold;">${character.current_hp}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="
+                                        width: 40px;
+                                        height: 40px;
+                                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                    ">⚔️</div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 11px;">ATK</div>
+                                        <div style="color: #fff; font-size: 18px; font-weight: bold;">${character.current_attack}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="
+                                        width: 40px;
+                                        height: 40px;
+                                        background: linear-gradient(135deg, #3b82f6, #2563eb);
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                    ">🛡️</div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 11px;">DEF</div>
+                                        <div style="color: #fff; font-size: 18px; font-weight: bold;">${character.current_defense}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="
+                                        width: 40px;
+                                        height: 40px;
+                                        background: linear-gradient(135deg, #10b981, #059669);
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                    ">💨</div>
+                                    <div>
+                                        <div style="color: #94a3b8; font-size: 11px;">SPD</div>
+                                        <div style="color: #fff; font-size: 18px; font-weight: bold;">${character.current_speed}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Close Button -->
+                        <div style="text-align: center; margin-top: 25px;">
+                            <button onclick="this.closest('.modal-overlay').remove()" style="
+                                background: linear-gradient(135deg, #FFD700, #FFA500);
+                                color: #000;
+                                border: none;
+                                padding: 15px 40px;
+                                border-radius: 12px;
+                                font-size: 18px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(255,215,0,0.6)'"
+                               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255,215,0,0.4)'">
+                                🎉 AWESOME!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInScale {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-50px) scale(0.8);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+                @keyframes bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-20px); }
+                }
+                @keyframes sparkle {
+                    from { background-position: 0 0; }
+                    to { background-position: 100px 100px; }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        // ==================== DAILY QUESTS SYSTEM ====================
+        let activeQuests = [];
+        let questResetTime = null;
+
+        // Load daily quests
+        async function loadDailyQuests() {
+            try {
+                const response = await apiClient.get('/daily-quests');
+                activeQuests = response.quests || [];
+
+                // Calculate reset time (24h from first quest creation)
+                if (activeQuests.length > 0) {
+                    const firstQuest = activeQuests[0];
+                    questResetTime = new Date(firstQuest.expires_at);
+                }
+
+                renderQuests();
+                startQuestTimer();
+            } catch (error) {
+                console.error('Error loading quests:', error);
+                document.getElementById('questsList').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                        <p>Failed to load quests. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render quests
+        function renderQuests() {
+            const questsList = document.getElementById('questsList');
+
+            if (activeQuests.length === 0) {
+                questsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px;"></i>
+                        <h3 style="margin: 0 0 10px 0;">All Quests Completed!</h3>
+                        <p style="margin: 0;">Come back tomorrow for new challenges.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const difficultyColors = {
+                common: '#94a3b8',
+                uncommon: '#10b981',
+                rare: '#6366f1',
+                epic: '#f59e0b'
+            };
+
+            const difficultyIcons = {
+                combat: 'fa-swords',
+                collection: 'fa-egg',
+                progression: 'fa-chart-line',
+                special: 'fa-star'
+            };
+
+            questsList.innerHTML = activeQuests.map(quest => {
+                const progress = Math.min((quest.current_progress / quest.target_value) * 100, 100);
+                const isCompleted = quest.is_completed;
+                const isClaimed = quest.is_claimed;
+                const color = difficultyColors[quest.difficulty] || '#64748b';
+                const icon = difficultyIcons[quest.quest_type] || 'fa-tasks';
+
+                return `
+                    <div style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; ${isClaimed ? 'opacity: 0.5;' : ''}">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <i class="fas ${icon}" style="color: ${color}; font-size: 20px;"></i>
+                                    <h3 style="margin: 0; color: white; font-size: 18px;">${quest.quest_name}</h3>
+                                    <span style="background: ${color}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;">${quest.difficulty}</span>
+                                </div>
+                                <p style="margin: 0; color: #94a3b8; font-size: 14px;">${quest.description}</p>
+                            </div>
+                            ${isCompleted && !isClaimed ? `
+                                <button onclick="claimQuest(${quest.id})" class="action-btn action-btn-success" style="padding: 10px 20px; font-size: 14px; white-space: nowrap;">
+                                    <i class="fas fa-gift"></i> Claim
+                                </button>
+                            ` : isClaimed ? `
+                                <span style="color: #10b981; font-weight: 600; white-space: nowrap;">
+                                    <i class="fas fa-check-circle"></i> Claimed
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; height: 24px; overflow: hidden; position: relative; margin-bottom: 12px;">
+                            <div style="background: linear-gradient(90deg, ${color}, ${color}dd); height: 100%; width: ${progress}%; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center;">
+                                <span style="position: absolute; left: 50%; transform: translateX(-50%); color: white; font-weight: 600; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">
+                                    ${quest.current_progress} / ${quest.target_value}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Rewards -->
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            ${quest.reward_gtk > 0 ? `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;"><i class="fas fa-coins"></i> ${quest.reward_gtk} GTK</span>` : ''}
+                            ${quest.reward_tower > 0 ? `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;"><i class="fas fa-tower-broadcast"></i> ${quest.reward_tower} TOWER</span>` : ''}
+                            ${quest.reward_item_id ? `<span style="background: rgba(99, 102, 241, 0.2); color: #6366f1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;"><i class="fas fa-box"></i> Random Item</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Claim quest reward
+        async function claimQuest(questId) {
+            try {
+                const response = await apiClient.post(`/daily-quests/claim/${questId}`);
+
+                if (response.success) {
+                    const rewards = response.rewards;
+                    let rewardText = 'Rewards claimed:\n';
+                    if (rewards.gtk > 0) rewardText += `\n💰 ${rewards.gtk} GTK`;
+                    if (rewards.tower > 0) rewardText += `\n🗼 ${rewards.tower} TOWER`;
+                    if (rewards.item) rewardText += `\n📦 ${rewards.item}`;
+
+                    showGameModal('Quest Complete!', rewardText, 'success');
+
+                    // Reload quests and balances
+                    await loadDailyQuests();
+                    await loadRealBalances();
+                }
+            } catch (error) {
+                console.error('Error claiming quest:', error);
+                showGameModal('Claim Failed', error.message || 'Failed to claim reward', 'error');
+            }
+        }
+
+        // Quest reset timer
+        function startQuestTimer() {
+            const timerElement = document.getElementById('questResetTimer');
+            if (!timerElement || !questResetTime) return;
+
+            function updateTimer() {
+                const now = new Date();
+                const diff = questResetTime - now;
+
+                if (diff <= 0) {
+                    timerElement.textContent = 'Resetting...';
+                    loadDailyQuests(); // Reload quests
+                    return;
+                }
+
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        // Track quest progress (call this after relevant actions)
+        async function trackQuestProgress(actionType, increment = 1, metadata = {}) {
+            try {
+                // This would be called from backend automatically
+                // Just reload quests to show updated progress
+                await loadDailyQuests();
+            } catch (error) {
+                console.error('Error tracking quest progress:', error);
+            }
+        }
+
+        // Open quests modal
+        document.querySelector('button[onclick*="daily-quests.html"]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('questsModal').style.display = 'flex';
+            loadDailyQuests();
+        });
+
+        // ==================== END DAILY QUESTS ====================
+
+        // ==================== PREMIUM MODAL & NOTIFICATION SYSTEM ====================
+        function showGameModal(title, message, type = 'info') {
+            const existingModal = document.getElementById('gameModal');
+            if (existingModal) existingModal.remove();
+
+            const icons = {
+                success: { icon: 'check-circle', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#10b981' },
+                error: { icon: 'times-circle', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: '#ef4444' },
+                warning: { icon: 'exclamation-triangle', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#f59e0b' },
+                info: { icon: 'info-circle', gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: '#6366f1' }
+            };
+
+            const style = icons[type] || icons.info;
+
+            const modal = document.createElement('div');
+            modal.id = 'gameModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(15, 23, 42, 0.85);
+                backdrop-filter: blur(12px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            `;
+
+            modal.innerHTML = `
+                <i class="fas fa-${style.icon}" style="color: white; font-size: 32px;"></i>
+                    </div>
+                    <h3 style="
+                        margin: 0 0 15px 0;
+                        color: #1e293b;
+                        font-size: 24px;
+                        font-weight: 700;
+                    ">${title}</h3>
+                    <p style="
+          
+                    ">${message}</p>
+                    <button id="gameModalCloseBtn" style="
+                        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+                        border: 1px solid rgba(255,255,255,0.2);
+                        color: white;
+                        padding: 12px 32px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        margin-top: 20px;
+                    ">
+                        Got it
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Add event listener to close button
+            const closeBtn = document.getElementById('gameModalCloseBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    const modal = document.getElementById('gameModal');
+                    if (modal) modal.remove();
+                });
+            }
+
+            // Close on overlay click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Make closeGameModal globally accessible (for backward compatibility)
+        window.closeGameModal = function () {
+            const modal = document.getElementById('gameModal');
+            if (modal) modal.remove();
+        }
+
+        function showGameNotification(message, type = 'success') {
+            const colors = {
+                success: { bg: '#10b981', icon: 'check-circle' },
+                error: { bg: '#ef4444', icon: 'times-circle' },
+                warning: { bg: '#f59e0b', icon: 'exclamation-triangle' },
+                info: { bg: '#6366f1', icon: 'info-circle' }
+            };
+
+            const color = colors[type] || colors.success;
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${color.bg};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 400px;
+                animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                font-weight: 500;
+            `;
+
+            notification.innerHTML = `
+                <i class="fas fa-${color.icon}" style="font-size: 20px;"></i>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3500);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            @keyframes modalSlideUp {
+                from {
+                    transform: translateY(50px) scale(0.9);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0) scale(1);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ==================== END MODAL SYSTEM ====================
+
+
+        // Marketplace Modal
+        document.getElementById('marketplaceBtn')?.addEventListener('click', () => {
+            document.getElementById('marketplaceModal').style.display = 'flex';
+            loadMarketplace();
+        });
+
+        document.getElementById('closeMarketplaceBtn')?.addEventListener('click', () => {
+            document.getElementById('marketplaceModal').style.display = 'none';
+        });
+
+        async function loadMarketplace() {
+            try {
+                document.getElementById('marketplaceLoading').style.display = 'block';
+                document.getElementById('marketplaceEmpty').style.display = 'none';
+                document.getElementById('marketplaceGrid').innerHTML = '';
+
+                const response = await apiClient.get('/marketplace');
+                let listings = response.listings || [];
+
+                const seenCharacterIds = new Set();
+                listings = listings.filter(listing => {
+                    if (listing.character_id) {
+                        if (seenCharacterIds.has(listing.character_id)) return false;
+                        seenCharacterIds.add(listing.character_id);
+                    }
+                    return true;
+                });
+
+                document.getElementById('marketplaceLoading').style.display = 'none';
+
+                if (listings.length === 0) {
+                    document.getElementById('marketplaceEmpty').style.display = 'block';
+                    return;
+                }
+
+                const userDataStr = localStorage.getItem('user');
+                const currentUserId = userDataStr ? JSON.parse(userDataStr).id : null;
+                const grid = document.getElementById('marketplaceGrid');
+
+                grid.innerHTML = listings.map(listing => {
+                    const char = listing.character;
+                    if (!char) return '';
+
+                    const isOwner = currentUserId && listing.seller_id === currentUserId;
+                    const rarityColors = {
+                        'SSS': '#FFD700', 'SS': '#E535AB', 'S': '#9333EA',
+                        'A': '#3B82F6', 'B': '#10b981', 'C': '#6b7280'
+                    };
+
+                    return `
+                        <div style="background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; margin-bottom: 10px;">
+                                <div style="font-size: 3em;">${getCharacterEmoji(char.character_type)}</div>
+                                <h3 style="margin: 10px 0; color: #1e293b;">${char.name || char.character_type} #${char.id}</h3>
+                                <span style="background: ${rarityColors[char.rarity] || '#6b7280'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700;">${char.rarity}</span>
+                                <span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-left: 5px;">Lv ${char.level}</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; font-size: 13px;">
+                                <div><strong>⚔️ ATK:</strong> ${char.current_attack}</div>
+                                <div><strong>🛡️ DEF:</strong> ${char.current_defense}</div>
+                                <div><strong>❤️ HP:</strong> ${char.current_hp}</div>
+                                <div><strong>⚡ SPD:</strong> ${char.current_speed}</div>
+                            </div>
+                            <div style="text-align: center; margin: 10px 0;">
+                                <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">${isOwner ? '<strong>Your Listing</strong>' : `Seller: #${listing.seller_id}`}</div>
+                                <div style="font-size: 24px; color: #f39c12; font-weight: 700;">💰 ${listing.price.toLocaleString()} TOWER</div>
+                            </div>
+                            ${isOwner ? `
+                                <button onclick="cancelMarketplaceListing(${listing.id})" style="width: 100%; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                    ❌ Cancel Listing
+                                </button>
+                            ` : `
+                                <button onclick="buyMarketplaceListing(${listing.id})" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                    Buy with TOWER
+                                </button>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading marketplace:', error);
+                document.getElementById('marketplaceLoading').innerHTML = '<div style="color: #ef4444;">Failed to load marketplace</div>';
+            }
+        }
+
+        window.buyMarketplaceListing = async function (listingId) {
+            if (!confirm('Confirm purchase with TOWER tokens?')) return;
+            try {
+                await apiClient.post(`/marketplace/${listingId}/buy`);
+                alert('Purchase successful!');
+                loadMarketplace();
+            } catch (error) {
+                alert('Purchase failed: ' + error.message);
+            }
+        };
+
+        window.cancelMarketplaceListing = async function (listingId) {
+            if (!confirm('Cancel this listing?')) return;
+            try {
+                await apiClient.delete(`/marketplace/${listingId}`);
+                alert('Listing cancelled!');
+                loadMarketplace();
+                loadCharacters();
+            } catch (error) {
+                alert('Cancel failed: ' + error.message);
+            }
+        };
+
+    </script>
+    <script src="js/modals.js"></script>
+</body>
+
+</html>

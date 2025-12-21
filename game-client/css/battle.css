@@ -1,0 +1,196 @@
+.battle-arena {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1f2937, #111827);
+    color: white;
+    padding: 20px;
+}
+
+.battle-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.combatant {
+    flex: 1;
+    text-align: center;
+}
+
+.combatant-emoji {
+    font-size: 80px;
+    margin-bottom: 10px;
+}
+
+.combatant-name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.hp-container {
+    max-width: 300px;
+    margin: 15px auto;
+}
+
+.hp-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.hp-bar {
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    transition: width 0.5s ease;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+.vs-divider {
+    font-size: 48px;
+    font-weight: bold;
+    padding: 0 30px;
+}
+
+.battle-log {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.battle-log h3 {
+    margin-bottom: 20px;
+    color: #10b981;
+}
+
+.log-entry {
+    padding: 12px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    border-left: 4px solid var(--entry-color, #6b7280);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.log-entry.attack {
+    --entry-color: #ef4444;
+}
+
+.log-entry.heal {
+    --entry-color: #10b981;
+}
+
+.log-entry.buff {
+    --entry-color: #3b82f6;
+}
+
+.log-entry.critical {
+    --entry-color: #f59e0b;
+    font-weight: bold;
+}
+
+.pot-info {
+    text-align: center;
+    background: rgba(245, 158, 11, 0.2);
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+.pot-amount {
+    font-size: 36px;
+    font-weight: bold;
+    color: #f59e0b;
+}
+
+.battle-result {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.result-modal {
+    background: white;
+    color: #1f2937;
+    padding: 50px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.result-icon {
+    font-size: 120px;
+    margin-bottom: 20px;
+}
+
+.result-title {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.result-rewards {
+    background: #f3f4f6;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.result-rewards h3 {
+    margin-bottom: 15px;
+    color: #667eea;
+}
+
+.reward-item {
+    font-size: 24px;
+    margin: 10px 0;
+}

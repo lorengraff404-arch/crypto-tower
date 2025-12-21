@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Raids - Crypto Tower Defense</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* === WORLD MAP === */
+        #worldMapView {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background:
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent),
+                radial-gradient(2px 2px at 15% 90%, white, transparent),
+                linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a2f4a 100%);
+            background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+            animation: twinkle 3s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(10, 14, 39, 0.3), rgba(10, 14, 39, 0.7));
+            pointer-events: none;
+        }
+
+        .map-pin {
+            position: absolute;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            z-index: 10;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .map-pin:hover {
+            transform: scale(1.3) translateY(-5px) !important;
+            filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 0 40px #f59e0b);
+            animation: none;
+        }
+
+        .pin-info {
+            margin-top: 5px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+            font-size: 12px;
+            color: #e2e8f0;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* === BATTLE VIEW === */
+        #battleView {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .battle-hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 40px;
+            z-index: 50;
+        }
+
+        .hp-panel {
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 250px;
+        }
+
+        .hp-panel h3 {
+            color: #fbbf24;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-family: 'Press Start 2P';
+        }
+
+        .hp-bar-container {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            height: 20px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .hp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.5s ease;
+        }
+
+        .hp-bar.low {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .hp-text {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Campaign HUD */
+        .campaign-hud {
+            position: absolute;
+            top: 120px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .stage-badge {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+            font-family: 'Press Start 2P';
+            font-size: 12px;
+        }
+
+        /* Battle Stage */
+        .battle-stage {
+            position: absolute;
+            top: 200px;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 100px;
+            align-items: center;
+        }
+
+        .team-side,
+        .boss-side {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .character-sprite,
+        .boss-sprite {
+            width: 120px;
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .boss-sprite {
+            width: 200px;
+            height: 200px;
+            border-color: #ef4444;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .active-attacker {
+            animation: lunge 0.3s ease-out;
+        }
+
+        @keyframes lunge {
+            0% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(50px) scale(1.1);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .flash-hit {
+            animation: flash 0.2s;
+        }
+
+        @keyframes flash {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(3) saturate(0);
+            }
+        }
+
+        .shaking {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        /* Damage numbers */
+        .dmg-number {
+            position: fixed;
+            font-family: 'Press Start 2P';
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        .player-dmg {
+            color: #fbbf24;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .team-dmg {
+            color: #ef4444;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(1.5);
+            }
+        }
+
+        /* Controls */
+        .battle-controls {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .action-menu {
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #475569;
+        }
+
+        .menu-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 2px solid #475569;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: 'Press Start 2P';
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .menu-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .attack-btn {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            border-color: #ef4444;
+        }
+
+        .attack-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Battle Log */
+        .battle-log {
+            position: absolute;
+            right: 20px;
+            top: 200px;
+            width: 300px;
+            height: 300px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 12px;
+            z-index: 40;
+        }
+
+        .battle-log div {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #475569;
+            padding-left: 10px;
+        }
+
+        /* Loot & Transitions */
+        .stage-clear-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P';
+            font-size: 40px;
+            color: #fbbf24;
+            text-shadow: 4px 4px 0 #000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            z-index: 150;
+        }
+
+        .loot-card {
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            padding: 15px;
+            width: 100px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: revealItem 0.5s forwards;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .loot-card.rare {
+            border-color: #fbbf24;
+            background: #451a03;
+        }
+
+        @keyframes revealItem {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mission Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #475569;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            color: #fbbf24;
+            font-family: 'Press Start 2P';
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mission-item {
+            background: #0f172a;
+            margin-bottom: 10px;
+            padding: 15px;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .mission-item.locked {
+            background: #334155;
+            border-color: #475569;
+            opacity: 0.6;
+        }
+
+        .mission-item.completed {
+            border-color: #10b981;
+            background: #064e3b;
+        }
+
+        .mission-info {
+            flex: 1;
+        }
+
+        .mission-name {
+            font-weight: bold;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+
+        .mission-details {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .mission-go-btn {
+            background: #fbbf24;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .mission-go-btn:hover {
+            background: #f59e0b;
+            transform: scale(1.05);
+        }
+
+        .btn-cancel {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- PREMIUM HEADER -->
+    <header style="
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 60px; 
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95)); 
+        backdrop-filter: blur(10px);
+        border-bottom: 2px solid #475569;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        z-index: 300;
+    ">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <button onclick="window.location.href='game.html'" style="
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                border: 2px solid #60a5fa;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.5)'"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)'">
+                ← BACK TO HUB
+            </button>
+            <h1 style="
+                font-family: 'Press Start 2P';
+                font-size: 18px;
+                background: linear-gradient(135deg, #fbbf24, #f59e0b);
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin: 0;
+            ">ISLAND RAIDS</h1>
+        </div>
+
+        <div id="missionInfo" style="
+            color: #e2e8f0;
+            font-size: 14px;
+            display: none;
+        ">
+            <span id="currentMissionName"></span>
+        </div>
+    </header>
+
+    <!-- Spacer for fixed header -->
+    <div style="height: 60px;"></div>
+
+    <!-- Stage Clear Overlay -->
+    <div id="stageClearMsg" class="stage-clear-overlay">MISSION CLEARED!</div>
+
+    <!-- WORLD MAP VIEW -->
+    <div id="worldMapView">
+        <div class="map-overlay"></div>
+        <!-- Pins added dynamically -->
+    </div>
+
+    <!-- MISSION SELECT MODAL -->
+    <div id="missionModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">SELECT MISSION</h2>
+            <div id="missionList"></div>
+            <button class="btn-cancel" onclick="closeMissionModal()">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- BATTLE VIEW -->
+    <div id="battleView">
+        <div class="battle-hud">
+            <div class="hp-panel">
+                <h3>YOUR TEAM</h3>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" id="teamHpBar" style="width: 100%;"></div>
+                </div>
+                <div class="hp-text" id="teamHpText">0/0</div>
+            </div>
+
+            <div class="hp-panel">
+                <h3 id="bossName">ENEMY</h3>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" id="bossHpBar" style="width: 100%;"></div>
+                </div>
+                <div class="hp-text" id="bossHpText">0/0</div>
+            </div>
+        </div>
+
+        <div class="campaign-hud">
+            <div class="stage-badge" id="stageText">STAGE 1 / 5</div>
+        </div>
+
+        <div class="battle-stage" id="battleStage">
+            <div class="team-side" id="teamSprites"></div>
+            <div class="boss-side">
+                <div class="boss-sprite" id="bossSprite"></div>
+            </div>
+        </div>
+
+        <!-- Battle Controls -->
+        <div class="battle-controls">
+            <!-- Main Menu -->
+            <div id="mainActionMenu" class="action-menu">
+                <button class="menu-btn attack-btn" id="btnFight" onclick="showMoveSelection()">FIGHT</button>
+                <button class="menu-btn" id="btnBag">BAG</button>
+                <button class="menu-btn" id="btnSwitch">SWITCH</button>
+                <button class="menu-btn" id="btnRun" onclick="location.reload()">RUN</button>
+            </div>
+
+            <!-- Move Selection Menu (Phase 10.4) -->
+            <div id="moveSelectionMenu" class="move-selection" style="display: none;">
+                <h3 style="color: #fbbf24; font-size: 14px; margin-bottom: 10px; text-align: center;">SELECT MOVE</h3>
+                <div class="moves-grid" id="movesGrid">
+                    <!-- Populated dynamically -->
+                </div>
+                <button class="menu-btn" onclick="hideMoveSelection()" style="width: 100%; margin-top: 10px;">←
+                    BACK</button>
+            </div>
+        </div>
+
+        <div class="battle-log" id="battleLog">
+            <div style="color: #fbbf24; font-weight: bold;">--- BATTLE LOG ---</div>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL -->
+    <div id="lootModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h1
+                style="color: #fbbf24; font-family: 'Press Start 2P'; font-size: 40px; margin-bottom: 20px; animation: bounce 1s infinite;">
+                VICTORY!</h1>
+            <div id="lootContainer"
+                style="margin-bottom: 20px; display: flex; justify-content: center; flex-wrap: wrap;">
+                <!-- Loot Cards Injected Here -->
+            </div>
+            <button onclick="location.reload()" class="menu-btn"
+                style="padding: 15px; width: 100%; background: #3b82f6;">RETURN TO MAP</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { apiClient } from './dist/js/api.js';
+
+        let currentSession = null;
+        let selectedIslandId = null;
+        let maxTeamHP = 0;
+        let myTeam = null;
+
+        // === ISLAND & MISSION SELECTION ===
+        window.selectIsland = async (id) => {
+            selectedIslandId = id;
+            try {
+                const res = await apiClient.get(`/raids/islands/${id}/missions`);
+                renderMissions(res.missions);
+            } catch (e) {
+                alert("Failed to load missions: " + e.message);
+            }
+        };
+
+        function renderMissions(missions) {
+            const list = document.getElementById('missionList');
+            list.innerHTML = '';
+
+            missions.forEach(m => {
+                const isLocked = m.is_locked;
+                const isCompleted = m.is_completed;
+
+                const div = document.createElement('div');
+                div.className = `mission-item ${isLocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}`;
+
+                div.innerHTML = `
+                    <div class="mission-info">
+                        <div class="mission-name">${m.name} ${isCompleted ? '✓' : ''}</div>
+                        <div class="mission-details">Enemy: ${m.enemy_name} | HP: ${m.enemy_hp}</div>
+                    </div>
+                    ${!isLocked ? `<button class="mission-go-btn" data-id="${m.id}">GO</button>` : '<span style="font-size: 20px;">🔒</span>'}
+                `;
+                list.appendChild(div);
+            });
+
+            document.querySelectorAll('.mission-go-btn').forEach(btn => {
+                btn.addEventListener('click', () => startMission(btn.dataset.id));
+            });
+
+            document.getElementById('missionModal').style.display = 'flex';
+        }
+
+        window.closeMissionModal = () => {
+            document.getElementById('missionModal').style.display = 'none';
+        };
+
+        async function startMission(missionId) {
+            if (!missionId) return;
+
+            const teamId = localStorage.getItem('selected_team_id');
+            if (!teamId && !myTeam) {
+                alert("Please select a team in 'My Team' first!");
+                return;
+            }
+
+            try {
+                const res = await apiClient.post('/raids/start', {
+                    mission_id: parseInt(missionId),
+                    team_id: parseInt(teamId || myTeam?.id || 1)
+                });
+
+                closeMissionModal();
+                startBattle(res);
+            } catch (e) {
+                console.error(e);
+                alert(e.message || "Failed to start mission");
+            }
+        }
+
+        // Original spawnDamageNumber - KEEP THIS ONE
+        function spawnDamageNumber(amount, type, targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const left = rect.left + rect.width / 2 + (Math.random() * 40 - 20);
+            const top = rect.top + (Math.random() * 40 - 20);
+
+            const el = document.createElement('div');
+            el.className = `dmg-number ${type}`;
+            el.innerText = amount;
+            el.style.left = `${left}px`;
+            el.style.top = `${top}px`;
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function updateHP(who, current, total) {
+            const pct = Math.max(0, (current / total) * 100);
+            document.getElementById(`${who}HpBar`).style.width = `${pct}%`;
+            document.getElementById(`${who}HpText`).innerText = `${current}/${total}`;
+        }
+
+        function addLog(msg, color) {
+            const log = document.getElementById('battleLog');
+            const p = document.createElement('div');
+            p.innerHTML = `<span style="color:${color}">${msg}</span>`;
+            log.prepend(p);
+        }
+
+        function disableControls(disabled) {
+            const btnFight = document.getElementById('btnFight');
+            const btnAttack = document.getElementById('btnAttack');
+            const btnBag = document.getElementById('btnBag');
+            const btnSwitch = document.getElementById('btnSwitch');
+            const btnRun = document.getElementById('btnRun');
+
+            if (btnFight) btnFight.disabled = disabled;
+            if (btnAttack) btnAttack.disabled = disabled;
+            if (btnBag) btnBag.disabled = disabled;
+            if (btnSwitch) btnSwitch.disabled = disabled;
+            if (btnRun) btnRun.disabled = disabled;
+        }
+
+        // === MOVE SELECTION SYSTEM (Phase 10.4) ===
+        function showMoveSelection() {
+            document.getElementById('mainActionMenu').style.display = 'none';
+
+            const movesGrid = document.getElementById('movesGrid');
+            movesGrid.innerHTML = '';
+
+            // Get active character's moves
+            const team = currentSession.team;
+            let activeChar = null;
+            for (let member of team.members) {
+                if (!member.is_backup) {
+                    activeChar = member.character;
+                    break;
+                }
+            }
+
+            if (!activeChar || !activeChar.moves || activeChar.moves.length === 0) {
+                movesGrid.innerHTML = '<p style="color: white; text-align: center;">No moves available!</p>';
+                return;
+            }
+
+            // Render each move
+            activeChar.moves.forEach((move, index) => {
+                const moveBtn = document.createElement('button');
+                moveBtn.className = `move-btn type-${move.type}`;
+
+                const ppPercent = (move.current_pp / move.base_pp) * 100;
+                const ppClass = ppPercent <= 25 ? 'pp-low' : 'pp-ok';
+
+                moveBtn.innerHTML = `
+                    <div class="move-name">${move.name}</div>
+                    <div class="move-details">
+                        ${move.type} | PWR: ${move.power || '-'} | 
+                        <span class="${ppClass}">PP: ${move.current_pp}/${move.base_pp}</span>
+                    </div>
+                `;
+
+                if (move.current_pp <= 0) {
+                    moveBtn.disabled = true;
+                } else {
+                    moveBtn.onclick = () => useMove(activeChar.id, index + 1);
+                }
+
+                movesGrid.appendChild(moveBtn);
+            });
+
+            document.getElementById('moveSelectionMenu').style.display = 'block';
+        }
+
+        function hideMoveSelection() {
+            document.getElementById('moveSelectionMenu').style.display = 'none';
+            document.getElementById('mainActionMenu').style.display = 'grid';
+        }
+
+        async function useMove(characterId, moveSlot) {
+            disableControls(true);
+
+            try {
+                const res = await apiClient.post(`/raids/${currentSession.id}/use-move`, {
+                    character_id: characterId,
+                    move_slot: moveSlot
+                });
+
+                const result = res.battle_result;
+                currentSession = res.session;
+
+                // Show effectiveness message
+                if (result.was_super_effective) {
+                    showFloatingMessage("It's super effective!", '#10b981', 1.5);
+                } else if (result.was_not_effective) {
+                    showFloatingMessage("It's not very effective...", '#ef4444', 1.0);
+                }
+
+                if (result.critical_hit) {
+                    showFloatingMessage("Critical hit!", '#fbbf24', 1.3);
+                }
+
+                // Show damage number
+                const bossSprite = document.querySelector('.boss-sprite');
+                if (bossSprite) {
+                    spawnDamageNumber(result.damage, getDamageColor(result.effectiveness), bossSprite);
+                }
+
+                // Add to battle log
+                addLog(result.message);
+
+                // Update UI
+                updateStageDisplay(currentSession);
+
+                // Check battle end
+                if (currentSession.status === 'COMPLETED') {
+                    setTimeout(() => showVictory(currentSession), 1500);
+                } else if (currentSession.status === 'FAILED') {
+                    setTimeout(() => {
+                        alert("DEFEAT! Your team was wiped out.");
+                        location.reload();
+                    }, 1500);
+                } else {
+                    disableControls(false);
+                    hideMoveSelection();
+                }
+
+            } catch (e) {
+                alert(e.message || 'Move failed');
+                disableControls(false);
+                hideMoveSelection();
+            }
+        }
+
+        function getDamageColor(effectiveness) {
+            if (effectiveness >= 2.0) return '#10b981'; // Green = super effective
+            if (effectiveness <= 0.5) return '#ef4444'; // Red = not effective
+            return '#fbbf24'; // Yellow = neutral
+        }
+
+        function showFloatingMessage(text, color, scale = 1.0) {
+            const msg = document.createElement('div');
+            msg.textContent = text;
+            msg.style.cssText = `
+                position: fixed;
+                top: 30%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(${scale});
+                color: ${color};
+                font-family: 'Press Start 2P';
+                font-size: 20px;
+                text-shadow: 3px 3px 0 #000;
+                z-index: 1000;
+                animation: floatUp 2s ease-out forwards;
+                pointer-events: none;
+            `;
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+
+        // === BATTLE LOGIC ===
+        async function startBattle(session) {
+            currentSession = session;
+            showBattleUI(session);
+        }
+
+        function showBattleUI(session) {
+            document.getElementById('worldMapView').style.display = 'none';
+            document.getElementById('battleView').style.display = 'block';
+
+            // Update Battle UI
+            updateStageDisplay(session);
+            maxTeamHP = session.current_team_hp;
+            updateHP('team', session.current_team_hp, maxTeamHP);
+
+            renderTeamSprites();
+            addLog(`Battle started! Mission: ${session.mission.name}`, '#ef4444');
+        }
+
+        function updateStageDisplay(session) {
+            document.getElementById('stageText').innerText = `MISSION ${session.mission.sequence}`;
+
+            const name = session.mission.enemy_name;
+            const hpMax = session.mission.enemy_hp;
+
+            document.getElementById('bossName').innerText = name;
+
+            const bossUrl = session.mission.enemy_image || 'https://images.unsplash.com/photo-1531891570158-e71b35a485bc?w=400';
+            document.getElementById('bossSprite').style.backgroundImage = `url('${bossUrl}')`;
+
+            updateHP('boss', session.current_boss_hp, hpMax);
+        }
+
+        function renderTeamSprites() {
+            const container = document.getElementById('teamSprites');
+            container.innerHTML = '';
+
+            if (!myTeam || !myTeam.members) return;
+
+            myTeam.members.filter(m => !m.is_backup).forEach(member => {
+                const sprite = document.createElement('div');
+                sprite.className = 'character-sprite';
+                const charImg = `https://images.unsplash.com/photo-1555952517-2e8e729e0b44?w=200`;
+                sprite.style.backgroundImage = `url('${charImg}')`;
+                container.appendChild(sprite);
+            });
+        }
+
+        // === ATTACK LOGIC ===
+        window.onAttack = async () => {
+            if (!currentSession) return;
+            disableControls(true);
+
+            const heroes = document.querySelectorAll('.character-sprite');
+            const randomHero = heroes[Math.floor(Math.random() * heroes.length)];
+            randomHero.classList.add('active-attacker');
+
+            await wait(300);
+
+            try {
+                const prevHP = currentSession.current_boss_hp;
+                const res = await apiClient.post(`/raids/${currentSession.id}/turn`);
+                const session = res.session;
+
+                const bossDmgTaken = prevHP - session.current_boss_hp;
+                const teamDmgTaken = currentSession.current_team_hp - session.current_team_hp;
+
+                currentSession = session;
+
+                if (bossDmgTaken > 0) {
+                    spawnDamageNumber(bossDmgTaken, 'player-dmg', document.querySelector('.boss-sprite'));
+                    document.getElementById('bossSprite').classList.add('flash-hit');
+                    setTimeout(() => document.getElementById('bossSprite').classList.remove('flash-hit'), 200);
+                    addLog(`Team dealt ${bossDmgTaken} damage!`, '#4ade80');
+                }
+
+                updateStageDisplay(session);
+                randomHero.classList.remove('active-attacker');
+
+                await wait(500);
+
+                if (session.status !== 'COMPLETED' && teamDmgTaken > 0) {
+                    addLog(`Enemy retaliated for ${teamDmgTaken}!`, '#ef4444');
+                    document.getElementById('battleStage').classList.add('shaking');
+                    spawnDamageNumber(teamDmgTaken, 'team-dmg', randomHero);
+
+                    updateHP('team', session.current_team_hp, maxTeamHP);
+                    setTimeout(() => document.getElementById('battleStage').classList.remove('shaking'), 500);
+                }
+
+                if (session.status === 'COMPLETED') {
+                    addLog('Victory achieved!', '#fbbf24');
+                    setTimeout(() => showVictory(session), 1000);
+                } else if (session.status === 'FAILED') {
+                    addLog('TEAM WIPED OUT...', '#ef4444');
+                    alert("DEFEAT");
+                    location.reload();
+                } else {
+                    disableControls(false);
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert(e.message);
+                disableControls(false);
+            }
+        };
+
+        function wait(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function showVictory(session) {
+            const grade = session.performance_grade || 'C';
+            const gradeColors = {
+                'S': '#fbbf24', // Gold
+                'A': '#3b82f6', // Blue
+                'B': '#10b981', // Green
+                'C': '#94a3b8', // Gray
+                'D': '#ef4444'  // Red
+            };
+            const gradeColor = gradeColors[grade] || '#94a3b8';
+
+            const container = document.getElementById('lootContainer');
+            container.innerHTML = `
+                <div style="width: 100%; margin-bottom: 20px;">
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 48px; color: ${gradeColor}; text-shadow: 4px 4px 0 #000; animation: bounce 1s infinite;">
+                        ${grade} RANK
+                    </h2>
+                    <p style="color: #94a3b8; margin-top: 10px;">
+                        Completed in ${session.turn_count} turns
+                    </p>
+                </div>
+                
+                <div class="loot-card" style="animation-delay: 0.2s">
+                    <div style="font-size:28px">⭐</div>
+                    <div style="font-size: 18px; font-weight: bold;">${session.xp_earned} XP</div>
+                    <div style="font-size: 10px; color: #94a3b8;">Experience</div>
+                </div>
+                
+                <div class="loot-card rare" style="animation-delay: 0.4s">
+                    <div style="font-size:28px">🪙</div>
+                    <div style="font-size: 18px; font-weight: bold;">${session.tokens_earned} GTK</div>
+                    <div style="font-size: 10px; color: #fbbf24;">Tokens</div>
+                </div>
+                
+                ${grade === 'S' || grade === 'A' ? `
+                <div class="loot-card rare" style="animation-delay: 0.6s; border-color: #f59e0b; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);">
+                    <div style="font-size:28px">🥚</div>
+                    <div style="font-size: 16px; font-weight: bold;">Mystery Egg!</div>
+                    <div style="font-size: 10px; color: #fbbf24;">Epic Drop</div>
+                </div>` : ''}
+            `;
+
+            document.getElementById('lootModal').style.display = 'flex';
+        }
+
+        // === MAP RENDERING ===
+        async function renderMap() {
+            try {
+                const res = await apiClient.get('/raids/islands');
+                const container = document.getElementById('worldMapView');
+
+                res.islands.forEach((island, index) => {
+                    const pin = document.createElement('div');
+                    pin.className = 'map-pin';
+
+                    const positions = [{ t: 30, l: 20 }, { t: 60, l: 50 }, { t: 20, l: 70 }];
+                    const pos = positions[index] || { t: 50, l: 50 };
+                    pin.style.top = `${pos.t}%`;
+                    pin.style.left = `${pos.l}%`;
+
+                    let icon = '🌴';
+                    if (island.name.includes("Volc")) icon = '🌋';
+                    if (island.name.includes("Froz")) icon = '❄️';
+
+                    pin.innerHTML = `
+                        <div style="font-size: 24px;">${icon}</div>
+                        <div class="pin-info">
+                            <div>${island.name}</div>
+                            <div style="font-size: 10px; color: #fbbf24;">Lvl ${island.min_level_req}+</div>
+                        </div>
+                    `;
+                    pin.onclick = () => window.selectIsland(island.id);
+                    container.appendChild(pin);
+                });
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // === INIT ===
+        async function init() {
+            try {
+                const tRes = await apiClient.get('/teams');
+                if (!tRes.teams || tRes.teams.length === 0) {
+                    alert("Construct a team in the Barracks first!");
+                    window.location.href = 'teams.html';
+                    return;
+                }
+                myTeam = tRes.teams[0];
+                renderMap();
+            } catch (e) {
+                console.error(e);
+                renderMap(); // Still show map even if team fetch fails
+            }
+        }
+
+        // === EVENT LISTENERS ===
+        function initControls() {
+            // Old FIGHT button (if exists, remove it)
+            const btnAttack = document.getElementById('btnAttack');
+            if (btnAttack) {
+                btnAttack.addEventListener('click', onAttack);
+            }
+
+            // BAG, SWITCH, RUN buttons (disabled for now)
+            const btnBag = document.getElementById('btnBag');
+            const btnSwitch = document.getElementById('btnSwitch');
+            const btnRun = document.getElementById('btnRun');
+            const btnItem = document.getElementById('btnItem'); // Assuming btnItem is the 'Bag' button
+
+            if (btnBag) btnBag.disabled = true;
+            if (btnSwitch) btnSwitch.disabled = true;
+
+            if (btnItem) {
+                btnItem.addEventListener('click', () => addLog('Bag is empty!', '#94a3b8'));
+            }
+            if (btnRun) {
+                btnRun.addEventListener('click', () => {
+                    if (confirm("Flee battle?")) location.reload();
+                });
+            }
+        }
+
+        init();
+        initControls();
+    </script>
+</body>
+
+</html>

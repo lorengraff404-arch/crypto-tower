@@ -1,0 +1,181 @@
+PVU 4.0 - PVE Mechanics & Facts
+Plant Vs Undead
+May 19, 2022
+
+ 
+
+Dear PVUers,
+After a long time awaited, finally the PVE Mode will be live in update v4.0, which will be available at the end of May, 2022.
+In light of this awesome news, we want to prepare the community with some basic knowledge about how the game would be played – so brace yourself for a storm of numbers and facts!
+ 
+1. Element and Type
+Each Undead and Plant now belong to a type and an element. While the elements mostly tell you what they can do – the type will be the key factor in determining the resistances against each element in the game.
+
+ 
+
+As the chart above demonstrated, an Undead type is very important as knowing what kind of elements it resists the most will surely change the outcome of a battle.
+While each Undead might belong to a different type, all the NFT Plants belong to the Flora type by default – which makes all Plants share the same resistance chart.
+ 
+2. Buff and Debuff
+As the battle goes on, the sheer number of calculations of stats will gradually become boring – and thus, we want to add another spice to the game.
+Alongside damaging skills, some (if not almost) of the skills in the game will apply additional effects: 
+Buff: positive effects that generally enhance self/allies' combat prowess and/ or survivability
+•	Amped: Increases ATK and default attack damage
+•	Bulked: Increases DEF and grants damage resistance
+•	Haste: Increases attack speed
+•	Fleet: Increases movement speed
+•	Warded: Increases all elemental resistances
+•	Regen: Restores HP over time and enhances the healing power
+Debuff: negative effects that range from lower enemy stats and/ or hinder their abilities
+•	Burn: Inflicts damage over time and neutralizes the target’s FIRE resistance
+•	Poison: Inflicts damage over time and reduces the target’s overall damage
+•	Bleed: Inflicts damage over time and deals direct damage if the target receives any extra source of damage
+•	Slow: Reduces movement speed
+•	Feeble: Reduces attack speed
+•	Impaired: Reduces ATK
+•	Broken: Reduces DEF
+•	Blind: Grants a chance to miss on default attacks
+•	Silence: Stops the target from using skills
+•	Disarmed: Stops the target from using default attacks
+•	Stun: Completely neutralizes the target
+•	Fire/ Water/ Ice/ Wind/ Thunder/ Earth/ Plant/ Dark Blight: Reduces the resistance of corresponding elements
+ 
+3. Undead Gallery
+
+ 
+
+Name: Drockwyrm
+Type: Dragon
+Element: Earth
+Role: Tanker | Physical Damage Dealer
+A fearsome predator lurking around the rocky mountains. It possesses unparallel strength which can easily break rocks and boulders with mere slams, and since its body is covered by sturdy carapaces from head to tail, its defensive power is also unquestionable. Adepts of close and personal combats, Drockwyrns are ideal as frontline tankers – as it can sponge attacks from the enemy easily and deal severe damage back in turn.
+Skill Set:
+•	Prima Shell [Level 1] - When its HP is high, sustains less damage from all sources
+•	Feralism [Level 10] – Grants Lifesteal and also replenishes HP upon felling enemy units
+•	Stone Carapace [Level 25] – Increases DEF and reflects some of taken damage back to attackers
+•	Horn Slam [Level 40] – Tackles and hurls the closest enemy unit, dealing heavy damage
+•	Mad Charge [Level 55] – Rushes forward, knocking all enemies on its path, dealing damage and inflicting Stun effect
+•	Scale Shed [Level 70] – Revives after being killed with a massive boost to ATK in exchange for the complete abandon of DEF
+
+ 
+
+Name: Wailforce
+Type: Beast
+Element: Ice
+Role: Assault Leader
+While its stats seem to be inferior to other Stage 3 Undeads, Wailforce makes it up by its wicked intellect and the strength of its packs. As an Alpha leader, it possesses strategic wit as well as powerful claws and fangs to shred the enemy into pieces. 
+Skill Set:
+•	Razor Fang [Level 1] – Default attacks have a chance to deal extra damage and inflicts Bleeding status
+•	Freezing Fang [Level 10] – Default attacks have a chance to deal extra damage and inflicts Feeble status
+•	Atomic Phase [Level 25] – Grants a chance to evade default attacks
+•	Empowering Howl [Level 38] – Enchances ATK and movement speed of nearby allies
+•	Demoralizing Howl [Level 53] – Inflicts Slow and Broken statues to nearby enemies
+•	Lethal Lunge [Level 66] – Lunges at an enemy from afar, dealing severe damage and has a chance to insta-kill it
+
+ 
+
+Name: Drusgartt
+Type: Avian
+Element: Wind
+Role: Spellcaster | Disruptor
+This night hunter is a threat to even the most fearsome Undeads, as it can move silently within the darkness and attack its foe with unforgiving spells. Possessing high attacking power and a long-ranged attack only make the matter worse, as only a few species can actually retaliate against this nocturnal creature without being killed in the first place.
+Skill Set:
+•	Fling [Level 1] – Flings a magical orb from long distance, dealing damage and inflicting Stun status
+•	Silent Sound [Level 10] – Grants immunity to Silence status
+•	Gust [Level 25] – Blasts out a tornado dealing damage to enemy units on its path and knocks them back
+•	Mind Control [Level 39] – Take control of an enemy unit, making it fights against its allies
+•	Deafening Sonic [Level 57] – Dealing heavy damage to a large area, inflicting Imparied and Feeble statuses
+•	Aerial Slash [Level 72] – Default attacks have a chance to deal direct damage and inflicts Bleeding status
+ 
+That’s all we have to share for the upcoming update v4.0 and the PVE Mode. We hope these knowledge help the community to understand more about the game and what to prepare to have a stronger start when 4.0 lands.
+In order to give the users an upper hand, another Offering Event will be opened at the end of May, 2022. The main focus of this Offering Event orients around NFT Spell cards and Stage 2 Plants, both can be used immediately right into the PVE Mode.
+We sincerely thank you for the long-term support, PVU Community. 
+PVE 4.0 - Gameplay Footage and Key Features
+Plant Vs Undead
+May 05, 2022
+
+ 
+
+Dear PVUers,
+It has been a long road with PVU since the first day, and we truly appreciate the passionate love and hearty support from the community.
+Through continuous waves of updates, we’ve witnessed the growth and transformation of PVU from a simple farming simulation game to a complex ecosystem with many metagames and layers of deep gameplay.
+But at its core, PVU has always been aiming to be a Tower Defense game. That’s what we promised and yes, we will deliver.
+As you all know, the PVE Mode will be released in v4.0, which will be live at the end of May 2022.
+We want to present some video footage of PVE Mode to quench the thirst from the community. Please do aware that this is still the under-developing state, which would be prompted to bugs and incompletion.
+Have a gander at what the PVE Mode of 4.0 would look like and play:
+ 
+GAME FLOW
+A quick explanation about the game flow:
+1. From a Deck consisting of 20 NFT cards (Undead/ Plant/ Spell), the users start PVE Game Mode with 8 HP and 250/1000 Mana
+2. Before each wave, the users have 30 seconds of the Preparation Phase to spend LE and Mana to deploy their defensive formation (Mana won’t replenish during this time)
+3. A hand of 4 random NFT cards will be drawn by the system from the Deck. The users can spend LE to redraw a better hand
+4. To deploy a NFT, simply drag its card onto the field: Undead to the lanes, and Plant to the lawns. Spell cards have their own proximity and effect.
+5. The users can hit the START button to start a wave prematurely, or wait until 30 seconds are up
+6. Hordes of enemy Undead will start to come in from the right side of the screen. Their goal is to reach the Defensive Line on the left most of the screen via the 2 lanes
+7. For every enemy Undead that breached the Defensive Line, the users will lose 1 HP. The game is over when the user’s HP reaches 0.
+8. Upon defeating enemies, they will drop random loot and grant the users some Mana. Mana also automatically regenerates overtime (only when not in the Preparation Phase, though)
+9. Waves will naturally become more difficult as the enemies will grow stronger, tougher enemies will appear, and some may even possess fearsome buffs.
+ 
+ELEMENT and TYPE
+Undead and Plants are broken down into Element and Type. Each type has its own weakness and resistance to certain Elements.
+There’re 8 Elements in the game:
+•	Fire
+•	Water
+•	Ice
+•	Thunder
+•	Dark
+•	Plant
+•	Earth
+•	Wind
+There’re also 8 Types in the game:
+•	Beast
+•	Dragon
+•	Insect
+•	Mineral
+•	Spirit
+•	Avian
+•	Aqua
+•	Flora
+All the Plants belong to the Flora category by default.
+Having solid knowledge about the Types/ Elements will surely give the users an upper hand during PVE Mode.
+ 
+PVE v4.0 will be released at the end of May 2022.
+All of your current NFTs can be used to participate in this game mode. Be aware that only NFT Undead/ Plants of Stage 2 and 3 can be used in PVE Mode. Be sure to evolve them in the Altar of Ascension before-handed.
+Cheers!
+PVU Farm 2.7
+Plant Vs Undead
+Dec 11, 2021
+
+ 
+
+Dear Gardeners,
+Farm 3.0 build is almost over 80 percent right now. Nevertheless, we still need to ensure that everything is under control and your experience gets better. In the meanwhile, we have updated the current Farm 2.6 to Farm 2.7, it's probably not a significant change, but it will be a stepping stone for Farm 3.0, also we have added filters to make the process of caring for your plants easier.
+Changelog
+•	You can't grow plants in the unsupported seasons. Unsupported plants will be removed when the seasons change, and all the accumulated LE of those plants will be nullified as well.
+
+ 
+
+•	You can't grow any plants in the Winter season (after v3.0, Gathering Mode will be available with many great buffs during Winter to compensate for the lack of plants harvest).
+•	Plants that haven't been watered within 2 days will be automatically removed. 
+•	Each account now can only purchase 25 Saplings and 2 Mamas at maximum. 
+
+ 
+
+•	You can now convert Saplings and Mamas into Mysterious Powder at the rate of 1 Sapling = 1 Powder and 1 Mama = 5 Powders (Mysterious Powder is the new item that has various effects in later updates).
+
+ 
+
+
+ 
+
+
+ 
+
+•	More filters to easily manage your Farms.
+
+ 
+
+•	UI/ UX improvements.
+•	Bugs fixed.
+ 
+

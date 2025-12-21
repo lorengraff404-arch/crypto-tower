@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .battle-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        .battle-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .character-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .character-card:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .character-card.active {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .hp-bar,
+        .mana-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f44336, #ff5722);
+            transition: width 0.5s;
+        }
+
+        .mana-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2196F3, #03A9F4);
+            transition: width 0.5s;
+        }
+
+        .abilities-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .ability-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .ability-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .ability-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .battle-log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-victory {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .status-defeat {
+            background: linear-gradient(135deg, #f44336, #E91E63);
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="battle-container">
+        <div class="battle-header">
+            <h1>⚔️ Battle System</h1>
+            <p id="status">Loading battle...</p>
+        </div>
+
+        <div id="battleContent"></div>
+
+        <div class="battle-log" id="battleLog">
+            <div class="log-entry">Battle started...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1';
+        let currentSession = null;
+        let battleState = null;
+
+        async function getToken() {
+            return localStorage.getItem('auth_token');
+        }
+
+        async function startRaid() {
+            const token = await getToken();
+            const response = await fetch(`${API_BASE}/raids/start`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ island_id: 1, team_characters: [] })
+            });
+            const data = await response.json();
+            currentSession = data.session_id;
+            await loadBattleState();
+        }
+
+        async function loadBattleState() {
+            if (!currentSession) return;
+
+            const token = await getToken();
+            const response = await fetch(`${API_BASE}/raids/${currentSession}/state`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            battleState = await response.json();
+            renderBattle();
+        }
+
+        async function executeTurn(characterId, abilityId, targetId) {
+            const token = await getToken();
+            const response = await fetch(`${API_BASE}/raids/${currentSession}/turn`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    character_id: characterId,
+                    action_type: 'ability',
+                    ability_id: abilityId,
+                    target_id: targetId
+                })
+            });
+            const result = await response.json();
+            addLog(result.result?.message || 'Turn executed');
+            await loadBattleState();
+        }
+
+        function renderBattle() {
+            const content = document.getElementById('battleContent');
+
+            if (battleState?.is_victory) {
+                content.innerHTML = '<div class="status-victory">🎉 VICTORY! 🎉</div>';
+                document.getElementById('status').textContent = 'Battle Won!';
+                return;
+            }
+
+            if (battleState?.is_defeat) {
+                content.innerHTML = '<div class="status-defeat">💀 DEFEAT 💀</div>';
+                document.getElementById('status').textContent = 'Battle Lost';
+                return;
+            }
+
+            const states = JSON.parse(battleState?.character_states || '[]');
+
+            content.innerHTML = `
+                <div class="characters-grid">
+                    ${states.map(char => `
+                        <div class="character-card ${char.type === 'player' ? 'active' : ''}">
+                            <h3>${char.type === 'player' ? '👤' : '👹'} Char ${char.char_id}</h3>
+                            <div>HP: ${char.current_hp}/${char.max_hp}</div>
+                            <div class="hp-bar">
+                                <div class="hp-fill" style="width: ${(char.current_hp / char.max_hp) * 100}%"></div>
+                            </div>
+                            <div>Mana: ${char.current_mana}/${char.max_mana}</div>
+                            <div class="mana-bar">
+                                <div class="mana-fill" style="width: ${(char.current_mana / char.max_mana) * 100}%"></div>
+                            </div>
+                            ${char.type === 'player' ? `
+                                <div class="abilities-panel">
+                                    <button class="ability-btn" onclick="executeTurn(${char.char_id}, 1, ${getFirstEnemy(states)})">⚡ Ability 1</button>
+                                    <button class="ability-btn" onclick="executeTurn(${char.char_id}, 2, ${getFirstEnemy(states)})">🔥 Ability 2</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getFirstEnemy(states) {
+            const enemy = states.find(s => s.type === 'enemy' && !s.is_fainted);
+            return enemy?.char_id || 0;
+        }
+
+        function addLog(message) {
+            const log = document.getElementById('battleLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        // Auto-start or load existing battle
+        if (localStorage.getItem('auth_token')) {
+            startRaid();
+        } else {
+            document.getElementById('status').textContent = 'Please login first';
+        }
+    </script>
+</body>
+
+</html>

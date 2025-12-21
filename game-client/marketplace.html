@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace | Crypto Tower Defense</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --secondary: #a78bfa;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --tower: #f39c12;
+            --rarity-SSS: linear-gradient(135deg, #FFD700, #FFA500);
+            --rarity-SS: linear-gradient(135deg, #E535AB, #C13584);
+            --rarity-S: linear-gradient(135deg, #9333EA, #7C3AED);
+            --rarity-A: linear-gradient(135deg, #3B82F6, #2563EB);
+            --rarity-B: linear-gradient(135deg, #10b981, #059669);
+            --rarity-C: linear-gradient(135deg, #64748b, #475569);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Nav Header */
+        .marketplace-header {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px 32px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-brand h1 {
+            font-size: 28px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            background: var(--surface);
+            border: 1px solid var(--surface-light);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-control {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--surface-light);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-control:focus {
+            border-color: var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Marketplace Grid */
+        .listing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 28px;
+        }
+
+        /* Card Styles: Exact parity with inventory + Marketplace improvements */
+        .listing-card {
+            background: var(--surface);
+            border: 2px solid var(--surface-light);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 520px;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Visual Header */
+        .asset-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .asset-emoji {
+            font-size: 72px;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .asset-main-info h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .seller-badge {
+            font-size: 11px;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        /* Stats parity */
+        .stats-display {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 18px;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 24px;
+            border: 1px solid var(--surface-light);
+        }
+
+        .stat-group {
+            text-align: center;
+        }
+
+        .stat-name {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        /* Price parity */
+        .price-section {
+            margin-top: auto;
+            border-top: 1px solid var(--surface-light);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .price-box {
+            background: rgba(243, 156, 18, 0.12);
+            border: 2px dashed rgba(243, 156, 18, 0.3);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .price-label {
+            font-size: 11px;
+            color: var(--tower);
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .price-amount {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--tower);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Button logic */
+        .action-button {
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-delist {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-buy:hover,
+        .btn-delist:hover {
+            transform: translateY(-2px) scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        /* Toast parity */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            border: 2px solid var(--primary);
+        }
+
+        #toast.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Loading */
+        .loader-box {
+            text-align: center;
+            padding: 100px 0;
+        }
+
+        .pulse {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: pulse-animation 1.5s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .marketplace-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .listing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="marketplace-header">
+            <div class="header-brand">
+                <h1><i class="fas fa-shopping-cart"></i> Global Marketplace</h1>
+            </div>
+            <div class="header-nav">
+                <a href="game.html" class="btn btn-glass"><i class="fas fa-arrow-left"></i> Home</a>
+                <a href="teams.html" class="btn btn-glass"><i class="fas fa-users"></i> Teams</a>
+                <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1); margin: 0 10px;"></div>
+                <div class="btn btn-glass" style="cursor: default; border-color: var(--tower);">
+                    🏆 <span id="towerVal">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filters -->
+        <div class="filter-panel">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>Search Name</label>
+                    <input type="text" id="searchInp" class="input-control" placeholder="Search..."
+                        oninput="filterListings()">
+                </div>
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select id="typeSel" class="input-control" onchange="filterListings()">
+                        <option value="">All Categories</option>
+                        <option value="character">Characters</option>
+                        <option value="item">Items</option>
+                        <option value="egg">Eggs</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Rarity</label>
+                    <select id="raritySel" class="input-control" onchange="filterListings()">
+                        <option value="">All Rarities</option>
+                        <option value="SSS">SSS</option>
+                        <option value="SS">SS</option>
+                        <option value="S">S</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select id="sortSel" class="input-control" onchange="filterListings()">
+                        <option value="new">Newly Listed</option>
+                        <option value="low">Price: Low to High</option>
+                        <option value="high">Price: High to Low</option>
+                        <option value="lv">Highest Level</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="loader" class="loader-box">
+            <div class="pulse"></div>
+            <p>Syncing Marketplace Data...</p>
+        </div>
+
+        <div id="noListings" class="loader-box" style="display: none;">
+            <i class="fas fa-ghost" style="font-size: 60px; display: block; margin-bottom: 20px; opacity: 0.3;"></i>
+            <h3>No Active Listings</h3>
+            <p>Check back in a few minutes or list your own assets!</p>
+        </div>
+
+        <main id="grid" class="listing-grid"></main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">Action complete!</span>
+    </div>
+
+    <script type="module">
+        import { apiClient } from './dist/js/api.js';
+
+        let allListings = [];
+        let user = null;
+
+        // Constants Parity
+        const EMOJIS = {
+            'BEAST': '🦁', 'DRAGON': '🐉', 'INSECT': '🐛', 'MINERAL': '💎',
+            'SPIRIT': '👻', 'AVIAN': '🦅', 'AQUA': '🐠', 'PLANT': '🌿', 'MACHINE': '🤖',
+            'Fire': '🔥', 'Water': '💧', 'Earth': '🌍', 'Air': '💨', 'Light': '✨', 'Dark': '🌑'
+        };
+
+        async function start() {
+            // AUTH CHECK - Require authentication
+            if (!await requireAuth()) {
+                return; // requireAuth() handles redirect
+            }
+
+            try {
+                // Try to get user from localStorage first
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    user = JSON.parse(userStr);
+                }
+
+                // If no user or no ID, fetch from API
+                if (!user || !user.id) {
+                    try {
+                        const profile = await apiClient.get('/auth/profile');
+                        if (profile && profile.id) {
+                            user = profile; // API returns user data directly
+                            localStorage.setItem('user', JSON.stringify(user));
+                            console.log('✅ User profile loaded:', user);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Could not fetch user profile:', e.message);
+                    }
+                }
+
+                await sync();
+                fetchBalances();
+            } catch (e) {
+                notify('Session error. Please log in again.', 'danger');
+            }
+        }
+
+        async function sync() {
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('grid').style.display = 'none';
+
+            try {
+                const res = await apiClient.get('/marketplace');
+                allListings = res.listings || [];
+                console.log('📡 Marketplace Sync:', allListings.length, 'listings loaded.');
+                filterListings();
+            } catch (e) {
+                notify('Database sync failed', 'danger');
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        async function fetchBalances() {
+            try {
+                const res = await apiClient.get('/economy/balance');
+                if (res.success) document.getElementById('towerVal').textContent = res.tower_balance.toLocaleString();
+            } catch (e) { }
+        }
+
+        window.filterListings = function () {
+            const search = document.getElementById('searchInp').value.toLowerCase();
+            const type = document.getElementById('typeSel').value;
+            const rarity = document.getElementById('raritySel').value;
+            const sort = document.getElementById('sortSel').value;
+
+            let filtered = allListings.filter(l => {
+                const asset = l.character || l.Character || l.item || l.Item;
+                const name = (asset?.name || l.asset_type || '').toLowerCase();
+
+                if (search && !name.includes(search)) return false;
+                if (type && l.asset_type.toLowerCase() !== type) return false;
+                if (rarity && asset?.rarity !== rarity) return false;
+                return true;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                const aPrice = a.price || 0;
+                const bPrice = b.price || 0;
+                switch (sort) {
+                    case 'low': return aPrice - bPrice;
+                    case 'high': return bPrice - aPrice;
+                    case 'lv': return ((b.character || b.Character)?.level || 0) - ((a.character || a.Character)?.level || 0);
+                    default: return new Date(b.created_at) - new Date(a.created_at);
+                }
+            });
+
+            render(filtered);
+        };
+
+        function render(data) {
+            const grid = document.getElementById('grid');
+            const empty = document.getElementById('noListings');
+
+            if (data.length === 0) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.style.display = 'grid';
+
+            grid.innerHTML = data.map(l => {
+                // ROBUST OWNERSHIP CHECK: Supports id, user_id, and userID from different auth flows
+                const sellerID = Number(l.seller_id || l.SellerID);
+                const currentID = Number(user?.id || user?.user_id || user?.userID);
+                const isOwner = currentID > 0 && sellerID === currentID;
+
+                // DEBUG: Log ownership check
+                console.log(`🔍 Listing #${l.id}: seller=${sellerID}, current=${currentID}, isOwner=${isOwner}`, user);
+
+                // DATA RECOVERY: Support both lowercase and PascalCase from GORM
+                const char = l.character || l.Character;
+                const item = l.item || l.Item;
+
+                if (char) return renderChar(l, char, isOwner);
+                if (item) return renderItem(l, item, isOwner);
+
+                // Fallback for listings with missing character data - Still shown per user request
+                return renderGhost(l, isOwner);
+            }).join('');
+        }
+
+        function renderChar(l, c, isOwner) {
+            const rarityColor = `var(--rarity-${c.rarity || 'C'})`;
+            const emoji = EMOJIS[c.character_type] || '👾';
+            const element = EMOJIS[c.element] || '✨';
+
+            return `
+                <div class="listing-card">
+                    <div class="asset-header">
+                        <div class="asset-emoji">${emoji}</div>
+                        <div class="asset-main-info">
+                            <h3>${c.name}</h3>
+                            <div class="seller-badge">
+                                <i class="fas fa-user-circle"></i> 
+                                ${isOwner ? '<strong>YOU are selling</strong>' : (l.seller?.wallet_address ? l.seller.wallet_address.slice(0, 6) + '...' + l.seller.wallet_address.slice(-4) : `Seller #${l.seller_id}`)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tag-container">
+                        <span class="tag" style="background: ${rarityColor}; color:white">${c.rarity} RANK</span>
+                        <span class="tag" style="background: var(--primary-light); color:white">Level ${c.level}</span>
+                        <span class="tag" style="background: var(--surface-light); color:var(--text)">${element} ${c.element || 'Unknown'}</span>
+                    </div>
+
+                    <div class="stats-display">
+                        <div class="stat-group"><span class="stat-name">⚔️ ATK</span><span class="stat-value">${c.current_attack || 0}</span></div>
+                        <div class="stat-group"><span class="stat-name">🛡️ DEF</span><span class="stat-value">${c.current_defense || 0}</span></div>
+                        <div class="stat-group"><span class="stat-name">❤️ HP</span><span class="stat-value">${c.current_hp || 0}</span></div>
+                        <div class="stat-group"><span class="stat-name">⚡ SPD</span><span class="stat-value">${c.current_speed || 0}</span></div>
+                    </div>
+
+                    <div class="price-section">
+                        <div class="price-box">
+                            <div class="price-label">Market Value</div>
+                            <div class="price-amount">💰 ${l.price.toLocaleString()} <span style="font-size:12px; margin-left:5px">TOWER</span></div>
+                        </div>
+                        
+                        ${isOwner ?
+                    `<button class="action-button btn-delist" onclick="delist(${l.id})">
+                                <i class="fas fa-times-circle"></i> Cancel My Listing
+                            </button>` :
+                    `<button class="action-button btn-buy" onclick="buy(${l.id}, ${l.price})">
+                                <i class="fas fa-shopping-cart"></i> Buy with TOWER
+                            </button>`
+                }
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderItem(l, i, isOwner) {
+            return `
+                <div class="listing-card">
+                    <div class="asset-header">
+                        <div class="asset-emoji">📦</div>
+                        <div class="asset-main-info">
+                            <h3>${i.name}</h3>
+                            <div class="seller-badge"><i class="fas fa-user"></i> Seller #${l.seller_id}</div>
+                        </div>
+                    </div>
+                    <div class="tag-container">
+                        <span class="tag" style="background: var(--rarity-B); color:white">${i.rarity || 'Common'}</span>
+                        <span class="tag" style="background: var(--secondary); color:white">EQUIPMENT</span>
+                    </div>
+                    <div class="stats-display" style="grid-template-columns: 1fr;">
+                        <div class="stat-group"><span class="stat-name">Item Class</span><span class="stat-value">${i.item_type}</span></div>
+                    </div>
+                    <div class="price-section">
+                        <div class="price-box">
+                             <div class="price-amount">💰 ${l.price.toLocaleString()}</div>
+                        </div>
+                        ${isOwner ?
+                    `<button class="action-button btn-delist" onclick="delist(${l.id})">❌ Delist Asset</button>` :
+                    `<button class="action-button btn-buy" onclick="buy(${l.id}, ${l.price})">🛒 Buy Item</button>`
+                }
+                    </div>
+                </div>
+            `;
+        }
+
+        // GHOST RENDER: Shows listings even when character data is currently syncing from DB
+        function renderGhost(l, isOwner) {
+            return `
+                <div class="listing-card" style="opacity: 0.8; border-style: dashed;">
+                    <div class="asset-header">
+                        <div class="asset-emoji">❓</div>
+                        <div class="asset-main-info">
+                            <h3 style="color: var(--text-dim)">Syncing character...</h3>
+                            <div class="seller-badge">Listing #${l.id}</div>
+                        </div>
+                    </div>
+                    <div style="flex-grow: 1; display:flex; align-items:center; justify-content:center; color:var(--text-dim); text-align:center; padding:20px;">
+                        <p>This character data is being retrieved from the cold storage. Please wait a few seconds.</p>
+                    </div>
+                    <div class="price-section">
+                        <div class="price-box"><div class="price-amount">💰 ${l.price.toLocaleString()}</div></div>
+                        ${isOwner ?
+                    `<button class="action-button btn-delist" onclick="delist(${l.id})">❌ Cancel Listing</button>` :
+                    `<button class="action-button btn-primary" style="opacity:0.5; cursor:not-allowed;" disabled>Syncing...</button>`
+                }
+                    </div>
+                </div>
+            `;
+        }
+
+        window.buy = async (id, price) => {
+            if (!confirm(`Buy for ${price} TOWER?`)) return;
+            try {
+                const res = await apiClient.post(`/marketplace/${id}/buy`);
+                if (res.success) {
+                    notify('Aquisition complete!', 'success');
+                    await sync();
+                    fetchBalances();
+                } else notify(res.error || 'Transaction failed', 'danger');
+            } catch (e) { notify(e.message, 'danger'); }
+        };
+
+        window.delist = async (id) => {
+            if (!confirm('Cancel this listing and return asset to inventory?')) return;
+            try {
+                const res = await apiClient.delete(`/marketplace/${id}`);
+                if (res.success) {
+                    notify('Listing revoked successfully', 'success');
+                    await sync();
+                } else notify(res.error || 'Revoke failed', 'danger');
+            } catch (e) { notify(e.message, 'danger'); }
+        };
+
+        function notify(msg, type) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.style.borderColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 4000);
+        }
+
+        start();
+    </script>
+    <!-- Auth System -->
+    <script src="js/auth.js"></script>
+    <script src="js/token-manager.js"></script>
+
+    <script src="js/modals.js"></script>
+</body>
+
+</html>

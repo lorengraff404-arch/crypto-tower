@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - La Red Viva</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/ui-utils.css">
+    <style>
+        .landing {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .logo {
+            font-size: 120px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .tagline {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+
+<body class="landing hero-bg">
+    <div class="hero">
+        <div class="logo">🏰</div>
+        <h1>Crypto Tower Defense</h1>
+        <h2 style="font-size: 24px; margin-bottom: 10px;">La Red Viva</h2>
+        <p class="tagline">
+            Defend the Network, earn crypto rewards, collect unique NFT characters,
+            and battle other players in this blockchain-powered tower defense game.
+        </p>
+
+        <div style="margin-top: 40px;">
+            <button id="connectWallet" class="btn btn-lg"
+                style="background: white; color: var(--primary); font-size: 20px; padding: 20px 40px;">
+                🦊 Connect Wallet to Play
+            </button>
+        </div>
+
+        <div id="walletInfo"
+            style="display: none; margin-top: 20px; background: rgba(255,255,255,0.2); padding: 15px 30px; border-radius: 10px;">
+            <p>Connected: <span id="walletAddress" style="font-weight: bold;"></span></p>
+            <button id="enterGame" class="btn btn-lg mt-2" style="background: white; color: var(--primary);">
+                ▶️ Enter Game
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card fade-in">
+            <div class="stat-icon">⚔️</div>
+            <div class="stat-value">PvP Battles</div>
+            <p class="stat-label">Real-time multiplayer</p>
+        </div>
+
+        <div class="stat-card fade-in" style="animation-delay: 0.2s;">
+            <div class="stat-icon">💎</div>
+            <div class="stat-value">NFT Characters</div>
+            <p class="stat-label">Collect & trade unique heroes</p>
+        </div>
+
+        <div class="stat-card fade-in" style="animation-delay: 0.4s;">
+            <div class="stat-icon">🪙</div>
+            <div class="stat-value">Crypto Rewards</div>
+            <p class="stat-label">Earn GTK & TOWER tokens</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Powered by Binance Smart Chain & opBNB</p>
+        <p style="margin-top: 10px; font-size: 14px; opacity: 0.8;">⛓️ Blockchain • 🎮 Play-to-Earn • 🏆 Competitive</p>
+    </div>
+
+    <script src="js/wallet.js"></script>
+    <script type="module" src="dist/js/game-api.js"></script>
+    <script type="module">
+        const connectBtn = document.getElementById('connectWallet');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddressEl = document.getElementById('walletAddress');
+        const enterGameBtn = document.getElementById('enterGame');
+
+        // Check if already connected
+        if (gameAPI.isAuthenticated()) {
+            const savedAddress = localStorage.getItem('wallet_address');
+            if (savedAddress) {
+                showWalletInfo(savedAddress);
+            }
+        }
+
+        // Connect wallet
+        connectBtn.addEventListener('click', async () => {
+            try {
+                connectBtn.disabled = true;
+                connectBtn.textContent = 'Connecting...';
+
+                // Step 1: Connect wallet
+                const address = await wallet.connect();
+                console.log('✅ Wallet connected:', address);
+
+                // Step 2: Get nonce from backend
+                connectBtn.textContent = 'Getting nonce...';
+                const nonceResponse = await gameAPI.getNonce(address);
+                console.log('✅ Nonce received:', nonceResponse);
+
+                // Step 3: Sign the message (the 'message' field from backend)
+                connectBtn.textContent = 'Sign message in MetaMask...';
+                const signature = await wallet.signMessage(nonceResponse.message);
+                console.log('✅ Message signed');
+
+                // Step 4: Verify signature with backend
+                connectBtn.textContent = 'Verifying...';
+                const authResponse = await gameAPI.verifySignature(address, signature);
+                console.log('✅ Authentication successful!', authResponse);
+
+                // Save wallet and initialize session properly
+                const now = Date.now();
+                if (authResponse.token) {
+                    localStorage.setItem('token', authResponse.token);
+                }
+                localStorage.setItem('wallet_address', address);
+                localStorage.setItem('session_start', now.toString());
+                localStorage.setItem('last_activity', now.toString());
+
+                showWalletInfo(address);
+
+            } catch (error) {
+                console.error('❌ Authentication failed:', error);
+                alert('Failed to connect: ' + error.message);
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🦊 Connect Wallet to Play';
+            }
+        });
+
+        // Enter game
+        enterGameBtn.addEventListener('click', () => {
+            window.location.href = 'game.html';
+        });
+
+        function showWalletInfo(address) {
+            connectBtn.style.display = 'none';
+            walletInfo.style.display = 'block';
+            walletAddressEl.textContent = wallet.formatAddress(address);
+        }
+    </script>
+    <script src="js/modals.js"></script>
+</body>
+
+</html>

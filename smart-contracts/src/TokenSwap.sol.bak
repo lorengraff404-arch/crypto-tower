@@ -1,0 +1,203 @@
+// TOWER ↔ GTK Swap Contract (Simple Pool-based)
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract TokenSwap is ReentrancyGuard, Pausable, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    IERC20 public immutable towerToken;
+    IERC20 public immutable gtkToken;
+    
+    // Fixed ratio: 1 TOWER = 100 GTK
+    uint256 public constant TOWER_TO_GTK_RATIO = 100;
+    
+    // Security: Rate limiting
+    mapping(address => uint256) public lastSwapTime;
+    uint256 public constant MIN_SWAP_INTERVAL = 60; // 1 minute between swaps
+    
+    // Security: Per-transaction limits
+    uint256 public maxTowerPerSwap = 1000 * 10**18; // 1000 TOWER max
+    uint256 public maxGTKPerSwap = 100000 * 10**18; // 100k GTK max
+    
+    // Security: Daily limits per user
+    mapping(address => uint256) public dailyTowerSwapped;
+    mapping(address => uint256) public dailyGTKSwapped;
+    mapping(address => uint256) public lastResetTime;
+    uint256 public constant DAILY_TOWER_LIMIT = 5000 * 10**18; // 5000 TOWER/day
+    uint256 public constant DAILY_GTK_LIMIT = 500000 * 10**18; // 500k GTK/day
+    
+    // Events
+    event SwapTowerForGTK(address indexed user, uint256 towerAmount, uint256 gtkAmount);
+    event SwapGTKForTower(address indexed user, uint256 gtkAmount, uint256 towerAmount);
+    event LiquidityAdded(uint256 towerAmount, uint256 gtkAmount);
+    
+    constructor(address _towerToken, address _gtkToken) {
+        require(_towerToken != address(0), "Invalid TOWER address");
+        require(_gtkToken != address(0), "Invalid GTK address");
+        
+        towerToken = IERC20(_towerToken);
+        gtkToken = IERC20(_gtkToken);
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+    }
+    
+    // Reset daily limits if 24 hours have passed
+    function _checkAndResetDailyLimit(address user) private {
+        if (block.timestamp >= lastResetTime[user] + 1 days) {
+            dailyTowerSwapped[user] = 0;
+            dailyGTKSwapped[user] = 0;
+            lastResetTime[user] = block.timestamp;
+        }
+    }
+    
+    // Swap TOWER for GTK
+    function swapTowerForGTK(uint256 towerAmount) external nonReentrant whenNotPaused {
+        require(towerAmount > 0, "Amount must be > 0");
+        require(towerAmount <= maxTowerPerSwap, "Exceeds per-swap limit");
+        
+        // Rate limiting
+        require(
+            block.timestamp >= lastSwapTime[msg.sender] + MIN_SWAP_INTERVAL,
+            "Too frequent swaps"
+        );
+        
+        // Daily limit check
+        _checkAndResetDailyLimit(msg.sender);
+        require(
+            dailyTowerSwapped[msg.sender] + towerAmount <= DAILY_TOWER_LIMIT,
+            "Daily limit exceeded"
+        );
+        
+        uint256 gtkAmount = towerAmount * TOWER_TO_GTK_RATIO;
+        
+        // Check contract has enough GTK
+        require(gtkToken.balanceOf(address(this)) >= gtkAmount, "Insufficient GTK liquidity");
+        
+        // Transfer TOWER from user to contract
+        require(
+            towerToken.transferFrom(msg.sender, address(this), towerAmount),
+            "TOWER transfer failed"
+        );
+        
+        // Transfer GTK from contract to user
+        require(gtkToken.transfer(msg.sender, gtkAmount), "GTK transfer failed");
+        
+        // Update tracking
+        dailyTowerSwapped[msg.sender] += towerAmount;
+        lastSwapTime[msg.sender] = block.timestamp;
+        
+        emit SwapTowerForGTK(msg.sender, towerAmount, gtkAmount);
+    }
+    
+    // Swap GTK for TOWER
+    function swapGTKForTower(uint256 gtkAmount) external nonReentrant whenNotPaused {
+        require(gtkAmount > 0, "Amount must be > 0");
+        require(gtkAmount <= maxGTKPerSwap, "Exceeds per-swap limit");
+        
+        // Rate limiting
+        require(
+            block.timestamp >= lastSwapTime[msg.sender] + MIN_SWAP_INTERVAL,
+            "Too frequent swaps"
+        );
+        
+        // Daily limit check
+        _checkAndResetDailyLimit(msg.sender);
+        require(
+            dailyGTKSwapped[msg.sender] + gtkAmount <= DAILY_GTK_LIMIT,
+            "Daily limit exceeded"
+        );
+        
+        require(gtkAmount % TOWER_TO_GTK_RATIO == 0, "GTK amount must be divisible by 100");
+        uint256 towerAmount = gtkAmount / TOWER_TO_GTK_RATIO;
+        
+        // Check contract has enough TOWER
+        require(towerToken.balanceOf(address(this)) >= towerAmount, "Insufficient TOWER liquidity");
+        
+        // Transfer GTK from user to contract
+        require(
+            gtkToken.transferFrom(msg.sender, address(this), gtkAmount),
+            "GTK transfer failed"
+        );
+        
+        // Transfer TOWER from contract to user
+        require(towerToken.transfer(msg.sender, towerAmount), "TOWER transfer failed");
+        
+        // Update tracking
+        dailyGTKSwapped[msg.sender] += gtkAmount;
+        lastSwapTime[msg.sender] = block.timestamp;
+        
+        emit SwapGTKForTower(msg.sender, gtkAmount, towerAmount);
+    }
+    
+    // Admin: Add liquidity to pool
+    function addLiquidity(uint256 towerAmount, uint256 gtkAmount) external onlyRole(ADMIN_ROLE) {
+        require(towerAmount > 0 || gtkAmount > 0, "Must add some liquidity");
+        
+        if (towerAmount > 0) {
+            require(
+                towerToken.transferFrom(msg.sender, address(this), towerAmount),
+                "TOWER transfer failed"
+            );
+        }
+        
+        if (gtkAmount > 0) {
+            require(
+                gtkToken.transferFrom(msg.sender, address(this), gtkAmount),
+                "GTK transfer failed"
+            );
+        }
+        
+        emit LiquidityAdded(towerAmount, gtkAmount);
+    }
+    
+    // Admin: Withdraw liquidity
+    function withdrawLiquidity(uint256 towerAmount, uint256 gtkAmount) external onlyRole(ADMIN_ROLE) {
+        if (towerAmount > 0) {
+            require(towerToken.transfer(msg.sender, towerAmount), "TOWER transfer failed");
+        }
+        
+        if (gtkAmount > 0) {
+            require(gtkToken.transfer(msg.sender, gtkAmount), "GTK transfer failed");
+        }
+    }
+    
+    // Admin: Update limits
+    function updateLimits(
+        uint256 _maxTowerPerSwap,
+        uint256 _maxGTKPerSwap
+    ) external onlyRole(ADMIN_ROLE) {
+        maxTowerPerSwap = _maxTowerPerSwap;
+        maxGTKPerSwap = _maxGTKPerSwap;
+    }
+    
+    // Admin: Pause/Unpause
+    function pause() external onlyRole(ADMIN_ROLE) {
+        _pause();
+    }
+    
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        _unpause();
+    }
+    
+    // View: Get pool reserves
+    function getReserves() external view returns (uint256 towerReserve, uint256 gtkReserve) {
+        towerReserve = towerToken.balanceOf(address(this));
+        gtkReserve = gtkToken.balanceOf(address(this));
+    }
+    
+    // View: Get user's remaining daily limit
+    function getRemainingDailyLimit(address user) external view returns (uint256 towerRemaining, uint256 gtkRemaining) {
+        if (block.timestamp >= lastResetTime[user] + 1 days) {
+            return (DAILY_TOWER_LIMIT, DAILY_GTK_LIMIT);
+        }
+        
+        towerRemaining = DAILY_TOWER_LIMIT - dailyTowerSwapped[user];
+        gtkRemaining = DAILY_GTK_LIMIT - dailyGTKSwapped[user];
+    }
+}

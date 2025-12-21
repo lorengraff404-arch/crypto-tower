@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - Game Hub</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/abilities.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            margin: 0 0 5px 0;
+            color: white;
+        }
+
+        .wallet-display {
+            opacity: 0.9;
+            font-size: 14px;
+            color: white;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .balance-item {
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+        }
+
+        .balance-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 4px;
+            color: white;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Quick Actions Bar */
+        .quick-actions {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .quick-actions-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        /* Characters Grid */
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        /* Character Card */
+        .character-card {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .character-card.selected {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3), 0 20px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 10;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+        }
+
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .char-emoji {
+            font-size: 64px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+        }
+
+        .char-info h3 {
+            font-size: 22px;
+            margin: 0 0 12px 0;
+            color: #f1f5f9;
+        }
+
+        .char-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 20px 0;
+            padding: 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .stat-value {
+            color: #f1f5f9;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .view-abilities-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .view-abilities-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .sell-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .sell-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .cancel-listing-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .cancel-listing-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+            border: none;
+            font-size: 28px;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.8);
+        }
+
+        .fab-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+        }
+
+        .fab:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Battle Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #334155;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #334155;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 18px 18px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .selected-team {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .selected-team-title {
+            font-size: 14px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .selected-team-chars {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .selected-team-char {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #10b981;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bet-input-group {
+            margin-bottom: 24px;
+        }
+
+        .bet-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #f1f5f9;
+        }
+
+        .bet-input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #334155;
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .bet-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .modal-btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .modal-btn-secondary {
+            background: rgba(100, 116, 139, 0.2);
+            color: #f1f5f9;
+            border: 2px solid #334155;
+        }
+
+        .modal-btn-secondary:hover {
+            background: rgba(100, 116, 139, 0.3);
+        }
+
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .characters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fab {
+                width: 56px;
+                height: 56px;
+                bottom: 24px;
+                right: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
+            <div class="header-title">
+                <h1>🏰 Crypto Tower Defense</h1>
+                <p class="wallet-display" id="walletDisplay"></p>
+            </div>
+            <div class="header-info">
+                <div class="balance-item">
+                    <div class="balance-label">GTK Balance</div>
+                    <div class="balance-value">💰 <span id="gtkBalance">0</span></div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">TOWER Balance</div>
+                    <div class="balance-value">🏆 <span id="towerBalance">0</span></div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="quick-actions-container">
+            <button class="action-btn action-btn-success" onclick="window.location.href='create-character.html'">
+                ✨ Create Character
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='type-chart.html'"
+                style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">
+                📊 Type Chart
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='teams.html'"
+                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                👥 My Team
+            </button>
+            <button class="action-btn action-btn-primary" onclick="window.location.href='island-raids.html'"
+                style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+                🌋 Island Raids
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='breeding.html'"
+                style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                🥚 Breeding
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='marketplace.html'"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                🏪 Marketplace
+            </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='daily-quests.html'"
+                style="background: linear-gradient(135deg, #10b981, #059669);">
+                🎯 Daily Quests
+            </button>
+            <!-- Quick Actions Bar -->
+            <button class="action-btn action-btn-success" onclick="showMintModal()"
+                style="background: linear-gradient(135deg, #6d28d9, #7e22ce);">
+                ✨ Mint Character
+            </button>
+            <button class="action-btn action-btn-success" onclick="showShopModal()"
+                style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                🛒 Shop
+            </button>
+            <button class="action-btn action-btn-success" onclick="showMyEggsModal()"
+                style="background: linear-gradient(135deg, #facc15, #eab308);">
+                🥚 My Eggs
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="section-title">🎮 My Characters</h1>
+        <p class="section-subtitle">Click to select characters for battle (max 3)</p>
+
+        <div id="loading" class="loading">
+            <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+            <p>Loading characters...</p>
+        </div>
+
+        <div id="empty" class="empty-state" style="display: none;">
+            <div class="empty-state-emoji">🥚</div>
+            <h2 style="margin-bottom: 12px; color: #374151;">No characters yet!</h2>
+            <p style="margin-bottom: 24px;">Create your first character to start playing</p>
+            <button class="action-btn action-btn-success" onclick="window.location.href='create-character.html'">
+                ✨ Create Character
+            </button>
+        </div>
+
+        <div id="characters" class="characters-grid"></div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button id="fabBtn" class="fab" style="display: none;" disabled>
+        ⚔️
+        <span id="fabBadge" class="fab-badge">0</span>
+    </button>
+
+    <!-- Battle Modal -->
+    <div id="battleModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>⚔️ Battle Setup</h2>
+            </div>
+            <div class="modal-body">
+                <div class="selected-team">
+                    <div class="selected-team-title">Your Team</div>
+                    <div id="selectedTeamDisplay" class="selected-team-chars"></div>
+                </div>
+
+                <div class="bet-input-group">
+                    <label class="bet-label">Bet Amount (TOWER)</label>
+                    <input type="number" id="betAmount" class="bet-input" min="0" value="10"
+                        placeholder="Enter bet amount">
+                </div>
+
+                <div class="modal-actions">
+                    <button id="startBattleBtn" class="modal-btn modal-btn-primary">
+                        ⚔️ Find Opponent
+                    </button>
+                    <button id="cancelBattleBtn" class="modal-btn modal-btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div id="sellModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>💰 Sell Character</h2>
+            </div>
+            <div class="modal-body">
+                <p id="sellCharacterName" style="margin-bottom: 20px; font-size: 18px; font-weight: 600;"></p>
+
+                <div class="bet-input-group">
+                    <label class="bet-label">Price (TOWER Tokens)</label>
+                    <input type="number" id="sellPrice" class="bet-input" min="1" value="1000"
+                        placeholder="Enter price">
+                </div>
+
+                <div class="modal-actions">
+                    <button id="confirmSellBtn" class="modal-btn modal-btn-primary">
+                        List on Marketplace
+                    </button>
+                    <button id="cancelSellBtn" class="modal-btn modal-btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { apiClient } from './dist/js/api.js';
+
+        let characters = [];
+        let selectedCharacterIds = [];
+
+        async function loadCharacters() {
+            try {
+                const response = await apiClient.get('/characters');
+                characters = response.characters || [];
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (characters.length === 0) {
+                    document.getElementById('empty').style.display = 'block';
+                    return;
+                }
+
+                renderCharacters();
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ef4444;">
+                        <p>Failed to load characters</p>
+                        <button onclick="location.reload()" class="action-btn action-btn-success" style="margin-top: 16px;">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCharacters() {
+            const container = document.getElementById('characters');
+            container.innerHTML = characters.map(char => {
+                const rarityColor = getRarityColor(char.rarity);
+                const evolutionName = getEvolutionName(char.level);
+                const isSelected = selectedCharacterIds.includes(char.id);
+
+                return `
+                    <div class="character-card ${isSelected ? 'selected' : ''}" data-char-id="${char.id}">
+                        ${isSelected ? '<div class="selected-badge">✓ Selected</div>' : ''}
+                        <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle, ${rarityColor}22 0%, transparent 70%); pointer-events: none;"></div>
+                        
+                        <div class="char-header">
+                            <div class="char-emoji">${getCharacterEmoji(char.character_type)}</div>
+                            <div class="char-info">
+                                <h3>${char.name || `${char.character_type} #${char.id}`}</h3>
+                                <div class="char-badges">
+                                    <span class="badge" style="background: ${rarityColor}; box-shadow: 0 2px 6px ${rarityColor}66;">
+                                        ⭐ ${char.rarity}
+                                    </span>
+                                    <span class="badge" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                        📊 Lvl ${char.level}
+                                    </span>
+                                    <span class="badge" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+                                        🌟 ${evolutionName}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Attack</span>
+                                <span class="stat-value">⚔️ ${char.current_attack}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Defense</span>
+                                <span class="stat-value">🛡️ ${char.current_defense}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">HP</span>
+                                <span class="stat-value">❤️ ${char.current_hp}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Speed</span>
+                                <span class="stat-value">⚡ ${char.current_speed}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 16px; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                            <span style="color: #60a5fa; font-size: 13px; font-weight: 600;">
+                                🔮 ${char.class} • ${char.element || 'Fire'} Element
+                            </span>
+                        </div>
+
+                        <a href="character-detail.html?id=${char.id}" class="view-abilities-btn" onclick="event.stopPropagation();">
+                            ⚡ View Abilities & Details
+                        </a>
+                        
+                        ${char.is_listed ? `
+                            <button class="cancel-listing-btn" onclick="event.stopPropagation(); cancelListing(${char.id})">
+                                ❌ Cancel Listing
+                            </button>
+                        ` : `
+                            <button class="sell-btn" onclick="event.stopPropagation(); openSellModal(${char.id}, '${char.name || char.character_type}')">
+                                💰 Sell on Marketplace
+                            </button>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Add click listeners
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'A') return; // Don't toggle if clicking link
+
+                    const charId = parseInt(card.dataset.charId);
+                    toggleCharacterSelection(charId);
+                });
+            });
+        }
+
+        function toggleCharacterSelection(charId) {
+            const index = selectedCharacterIds.indexOf(charId);
+
+            if (index > -1) {
+                selectedCharacterIds.splice(index, 1);
+            } else {
+                if (selectedCharacterIds.length >= 3) {
+                    alert('Maximum 3 characters allowed!');
+                    return;
+                }
+                selectedCharacterIds.push(charId);
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update character cards
+            document.querySelectorAll('.character-card').forEach(card => {
+                const charId = parseInt(card.dataset.charId);
+                const isSelected = selectedCharacterIds.includes(charId);
+
+                if (isSelected) {
+                    card.classList.add('selected');
+                    if (!card.querySelector('.selected-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'selected-badge';
+                        badge.textContent = '✓ Selected';
+                        card.insertBefore(badge, card.firstChild);
+                    }
+                } else {
+                    card.classList.remove('selected');
+                    const badge = card.querySelector('.selected-badge');
+                    if (badge) badge.remove();
+                }
+            });
+
+            // Update FAB
+            const fab = document.getElementById('fabBtn');
+            const fabBadge = document.getElementById('fabBadge');
+            fabBadge.textContent = selectedCharacterIds.length;
+
+            if (selectedCharacterIds.length > 0) {
+                fab.style.display = 'flex';
+                fab.disabled = false;
+            } else {
+                fab.style.display = 'none';
+                fab.disabled = true;
+            }
+        }
+
+        // FAB click
+        document.getElementById('fabBtn').addEventListener('click', () => {
+            const selectedChars = characters.filter(c => selectedCharacterIds.includes(c.id));
+            const teamDisplay = document.getElementById('selectedTeamDisplay');
+
+            teamDisplay.innerHTML = selectedChars.map(char => `
+                <div class="selected-team-char">
+                    <span style="font-size: 24px;">${getCharacterEmoji(char.character_type)}</span>
+                    <span style="font-weight: 600;">${char.name || char.character_type}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('battleModal').classList.add('active');
+        });
+
+        // Modal cancel
+        document.getElementById('cancelBattleBtn').addEventListener('click', () => {
+            document.getElementById('battleModal').classList.remove('active');
+        });
+
+        // Start battle
+        document.getElementById('startBattleBtn').addEventListener('click', async () => {
+            try {
+                const betAmount = parseInt(document.getElementById('betAmount').value) || 0;
+                const btn = document.getElementById('startBattleBtn');
+
+                btn.disabled = true;
+                btn.textContent = '🔍 Finding opponent...';
+
+                const battle = await apiClient.post('/battles/matchmaking', {
+                    character_ids: selectedCharacterIds,
+                    bet_amount: betAmount
+                });
+
+                window.location.href = `battle.html?id=${battle.battle_id}`;
+            } catch (error) {
+                alert('Failed to start battle: ' + error.message);
+                document.getElementById('startBattleBtn').disabled = false;
+                document.getElementById('startBattleBtn').textContent = '⚔️ Find Opponent';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+
+        // Sell Modal Functions
+        let selectedCharacterForSale = null;
+
+        window.openSellModal = function (charId, charName) {
+            selectedCharacterForSale = charId;
+            document.getElementById('sellCharacterName').textContent = `Selling: ${charName}`;
+            document.getElementById('sellModal').classList.add('active');
+        };
+
+        document.getElementById('cancelSellBtn').addEventListener('click', () => {
+            document.getElementById('sellModal').classList.remove('active');
+            selectedCharacterForSale = null;
+        });
+
+        document.getElementById('confirmSellBtn').addEventListener('click', async () => {
+            const price = parseInt(document.getElementById('sellPrice').value);
+
+            if (!price || price < 1) {
+                alert('Please enter a valid price');
+                return;
+            }
+
+            try {
+                const response = await apiClient.post('/marketplace/list', {
+                    item_type: 'character',
+                    item_id: selectedCharacterForSale,
+                    price: price,
+                    currency: 'TOWER'
+                });
+
+                if (response.success) {
+                    alert('Character listed on marketplace!');
+                    document.getElementById('sellModal').classList.remove('active');
+                    selectedCharacterForSale = null;
+                    loadCharacters(); // Reload to show updated status
+                }
+            } catch (error) {
+                alert('Failed to list character: ' + error.message);
+            }
+        });
+
+        function getRarityColor(rarity) {
+            const colors = {
+                'SSS': '#FFD700',
+                'SS': '#E535AB',
+                'S': '#9333EA',
+                'A': '#3B82F6',
+                'B': '#10b981',
+                'C': '#6B7280'
+            };
+            return colors[rarity] || colors['C'];
+        }
+
+        function getEvolutionName(level) {
+            if (level >= 75) return 'Ultimate';
+            if (level >= 50) return 'Mature';
+            if (level >= 25) return 'Growth';
+            return 'Base';
+        }
+
+        function getCharacterEmoji(type) {
+            const emojis = {
+                // Character Types
+                'BEAST': '🦁',
+                'DRAGON': '🐉',
+                'INSECT': '🐛',
+                'MINERAL': '💎',
+                'SPIRIT': '👻',
+                'AVIAN': '🦅',
+                'AQUA': '🐠',
+                'FLORA': '🌿',
+                // Legacy support
+                'Dragon': '🐉',
+                'Beast': '🦁',
+                'Plant': '🌿',
+                'Warrior': '⚔️',
+                'Mage': '🔮',
+                'Tank': '🛡️'
+            };
+            return emojis[type] || '✨';
+        }
+
+        function getElementEmoji(element) {
+            const emojis = {
+                'FIRE': '🔥',
+                'WATER': '💧',
+                'ICE': '❄️',
+                'THUNDER': '⚡',
+                'DARK': '🌑',
+                'PLANT': '🌱',
+                'EARTH': '🪨',
+                'WIND': '💨',
+                // Legacy
+                'Fire': '🔥',
+                'Water': '💧',
+                'Ice': '❄️'
+            };
+            return emojis[element] || '✨';
+        }
+
+        // Initialize
+        loadCharacters();
+    </script>
+</body>
+
+</html><!-- Mint Character Modal -->
+<div id="mintModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeMintModal()">&times;</span>
+        <h2>✨ Mint New Character</h2>
+
+        <div class="mint-info">
+            <p>Mint a random character egg! Higher TOWER investment = better odds.</p>
+            <p><strong>First mint is FREE!</strong> (but 99.9% chance of C rank)</p>
+        </div>
+
+        <div class="mint-amount-section">
+            <label for="towerAmount">TOWER Amount (0 for free, 1-10,000 for better odds):</label>
+            <input type="number" id="towerAmount" min="0" max="10000" value="0" oninput="updateOddsPreview()">
+            <div class="balance-display">Your Balance: <span id="userTowerBalance">0</span> TOWER</div>
+        </div>
+
+        <div class="odds-preview" id="oddsPreview">
+            <h3>Rarity Odds:</h3>
+            <div class="odds-table">
+                <div class="odds-row">
+                    <span class="rarity sss">SSS</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-sss"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-sss">0.1%</span>
+                </div>
+                <div class="odds-row">
+                    <span class="rarity ss">SS</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-ss"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-ss">0.9%</span>
+                </div>
+                <div class="odds-row">
+                    <span class="rarity s">S</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-s"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-s">4%</span>
+                </div>
+                <div class="odds-row">
+                    <span class="rarity a">A</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-a"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-a">15%</span>
+                </div>
+                <div class="odds-row">
+                    <span class="rarity b">B</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-b"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-b">30%</span>
+                </div>
+                <div class="odds-row">
+                    <span class="rarity c">C</span>
+                    <span class="odds-bar">
+                        <div class="bar" id="odds-c"></div>
+                    </span>
+                    <span class="odds-percent" id="percent-c">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="mint-btn" onclick="mintCharacter()">Mint Character Egg</button>
+    </div>
+</div>
+
+<!-- Shop Modal -->
+<div id="shopModal" class="modal">
+    <div class="modal-content large">
+        <span class="close" onclick="closeShopModal()">&times;</span>
+        <h2>🛒 Item Shop</h2>
+
+        <div class="shop-tabs">
+            <button class="tab-btn active" onclick="filterShop('all')">All</button>
+            <button class="tab-btn" onclick="filterShop('healing')">Healing</button>
+            <button class="tab-btn" onclick="filterShop('status')">Status</button>
+            <button class="tab-btn" onclick="filterShop('pp')">PP Recovery</button>
+            <button class="tab-btn" onclick="filterShop('battle')">Battle</button>
+            <button class="tab-btn" onclick="filterShop('egg')">Egg Items</button>
+        </div>
+
+        <div class="gtk-balance">GTK Balance: <span id="userGTKBalance">0</span></div>
+
+        <div id="shopItems" class="shop-grid">
+            <!-- Items will be loaded here -->
+        </div>
+
+        <h3>Your Inventory</h3>
+        <div id="userInventory" class="inventory-grid">
+            <!-- Inventory will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- My Eggs Modal -->
+<div id="myEggsModal" class="modal">
+    <div class="modal-content large">
+        <span class="close" onclick="closeMyEggsModal()">&times;</span>
+        <h2>🥚 My Eggs</h2>
+
+        <div id="eggsList" class="eggs-grid">
+            <!-- Eggs will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Mint Modal Styles */
+    .mint-info {
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .mint-amount-section {
+        margin: 20px 0;
+    }
+
+    .mint-amount-section label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .mint-amount-section input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 2px solid #4CAF50;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+
+    .balance-display {
+        margin-top: 10px;
+        color: #FFD700;
+        font-weight: bold;
+    }
+
+    .odds-preview {
+        margin: 20px 0;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+    }
+
+    .odds-table {
+        margin-top: 15px;
+    }
+
+    .odds-row {
+        display: grid;
+        grid-template-columns: 60px 1fr 80px;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .rarity {
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .rarity.sss {
+        background: linear-gradient(135deg, #ff0080, #ff8c00);
+    }
+
+    .rarity.ss {
+        background: linear-gradient(135deg, #9c27b0, #e91e63);
+    }
+
+    .rarity.s {
+        background: linear-gradient(135deg, #2196f3, #00bcd4);
+    }
+
+    .rarity.a {
+        background: linear-gradient(135deg, #4caf50, #8bc34a);
+    }
+
+    .rarity.b {
+        background: linear-gradient(135deg, #ff9800, #ffc107);
+    }
+
+    .rarity.c {
+        background: linear-gradient(135deg, #757575, #9e9e9e);
+    }
+
+    .odds-bar {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        height: 20px;
+    }
+
+    .odds-bar .bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        transition: width 0.3s ease;
+    }
+
+    .odds-percent {
+        text-align: right;
+        font-weight: bold;
+        color: #FFD700;
+    }
+
+    .mint-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        background: linear-gradient(135deg, #4CAF50, #8BC34A);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .mint-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+    }
+
+    /* Shop Modal Styles */
+    .modal-content.large {
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .shop-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+        background: rgba(76, 175, 80, 0.3);
+        border-color: #4CAF50;
+    }
+
+    .tab-btn:hover {
+        background: rgba(76, 175, 80, 0.2);
+    }
+
+    .gtk-balance {
+        text-align: right;
+        font-size: 18px;
+        font-weight: bold;
+        color: #FFD700;
+        margin-bottom: 20px;
+    }
+
+    .shop-grid,
+    .inventory-grid,
+    .eggs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .shop-item,
+    .inventory-item,
+    .egg-card {
+        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .shop-item:hover,
+    .inventory-item:hover,
+    .egg-card:hover {
+        transform: translateY(-5px);
+        border-color: #4CAF50;
+        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    }
+
+    .item-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .item-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .item-description {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 10px;
+    }
+
+    .item-cost {
+        color: #FFD700;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .buy-btn,
+    .use-btn,
+    .hatch-btn {
+        width: 100%;
+        padding: 8px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .buy-btn:hover,
+    .use-btn:hover,
+    .hatch-btn:hover {
+        background: #45a049;
+        transform: scale(1.05);
+    }
+
+    .egg-timer {
+        color: #FF9800;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .egg-ready {
+        color: #4CAF50;
+        font-weight: bold;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+</style>// Gacha System Functions
+
+// Mint Modal
+function showMintModal() {
+    document.getElementById('mintModal').style.display = 'block';
+    loadUserBalance();
+    updateOddsPreview();
+}
+
+function closeMintModal() {
+    document.getElementById('mintModal').style.display = 'none';
+}
+
+async function loadUserBalance() {
+    try {
+        const response = await apiClient.get('/user/profile');
+        document.getElementById('userTowerBalance').textContent = response.tower_balance || 0;
+        document.getElementById('userGTKBalance').textContent = response.gtk_balance || 0;
+    } catch (error) {
+        console.error('Error loading balance:', error);
+    }
+}
+
+async function updateOddsPreview() {
+    const amount = document.getElementById('towerAmount').value || 0;
+
+    try {
+        const response = await apiClient.get(`/gacha/odds/${amount}`);
+        const odds = response.odds;
+
+        // Update odds display
+        ['sss', 'ss', 's', 'a', 'b', 'c'].forEach(rarity => {
+            const percent = odds[rarity.toUpperCase()] || 0;
+            document.getElementById(`percent-${rarity}`).textContent = percent.toFixed(2) + '%';
+            document.getElementById(`odds-${rarity}`).style.width = percent + '%';
+        });
+    } catch (error) {
+        console.error('Error fetching odds:', error);
+    }
+}
+
+async function mintCharacter() {
+    const amount = parseInt(document.getElementById('towerAmount').value) || 0;
+
+    if (amount < 0 || amount > 10000) {
+        alert('Amount must be between 0 and 10,000 TOWER');
+        return;
+    }
+
+    try {
+        const response = await apiClient.post('/gacha/mint', { tower_amount: amount });
+
+        if (response.success) {
+            const egg = response.egg;
+            alert(`✨ Egg Minted! Rarity: ${egg.rarity}\nElement: ${egg.element}\nType: ${egg.character_type}\nClass: ${egg.class}\nIncubation: ${egg.incubation_time} hours`);
+            closeMintModal();
+            loadUserBalance();
+            loadCharacters(); // Refresh character list
+        }
+    } catch (error) {
+        alert('Error minting egg: ' + (error.response?.data?.error || error.message));
+    }
+}
+
+// Shop Modal
+function showShopModal() {
+    document.getElementById('shopModal').style.display = 'block';
+    loadUserBalance();
+    loadShopItems('all');
+    loadUserInventory();
+}
+
+function closeShopModal() {
+    document.getElementById('shopModal').style.display = 'none';
+}
+
+function filterShop(category) {
+    // Update active tab
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    loadShopItems(category);
+}
+
+async function loadShopItems(category) {
+    try {
+        const endpoint = category === 'all' ? '/shop/items' : `/shop/items/${category}`;
+        const response = await apiClient.get(endpoint);
+        const items = response.items || [];
+
+        const shopGrid = document.getElementById('shopItems');
+        shopGrid.innerHTML = '';
+
+        if (items.length === 0) {
+            shopGrid.innerHTML = '<p>No items available in this category.</p>';
+            return;
+        }
+
+        items.forEach(item => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'shop-item';
+            itemCard.innerHTML = `
+                <div class="item-icon">🎁</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-description">${item.description}</div>
+                <div class="item-cost">${item.gtk_cost} GTK</div>
+                <button class="buy-btn" onclick="buyItem(${item.id}, '${item.name}', ${item.gtk_cost})">Buy</button>
+            `;
+            shopGrid.appendChild(itemCard);
+        });
+    } catch (error) {
+        console.error('Error loading shop items:', error);
+    }
+}
+
+async function buyItem(itemId, itemName, cost) {
+    const quantity = prompt(`How many ${itemName} do you want to buy? (Max 99)`, '1');
+    if (!quantity) return;
+
+    const qty = parseInt(quantity);
+    if (qty < 1 || qty > 99) {
+        alert('Quantity must be between 1 and 99');
+        return;
+    }
+
+    try {
+        const response = await apiClient.post('/shop/buy', {
+            item_id: itemId,
+            quantity: qty
+        });
+
+        if (response.success) {
+            alert(`✅ Purchased ${qty}x ${itemName} for ${cost * qty} GTK!`);
+            loadUserBalance();
+            loadUserInventory();
+        }
+    } catch (error) {
+        alert('Error buying item: ' + (error.response?.data?.error || error.message));
+    }
+}
+
+async function loadUserInventory() {
+    try {
+        const response = await apiClient.get('/shop/inventory');
+        const inventory = response.inventory || [];
+
+        const inventoryGrid = document.getElementById('userInventory');
+        inventoryGrid.innerHTML = '';
+
+        if (inventory.length === 0) {
+            inventoryGrid.innerHTML = '<p>Your inventory is empty.</p>';
+            return;
+        }
+
+        inventory.forEach(inv => {
+            const item = inv.item;
+            const itemCard = document.createElement('div');
+            itemCard.className = 'inventory-item';
+            itemCard.innerHTML = `
+                <div class="item-icon">📦</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-quantity">Quantity: ${inv.quantity}</div>
+                <button class="use-btn" onclick="useItem(${item.id}, '${item.name}')">Use</button>
+            `;
+            inventoryGrid.appendChild(itemCard);
+        });
+    } catch (error) {
+        console.error('Error loading inventory:', error);
+    }
+}
+
+async function useItem(itemId, itemName) {
+    // Get character to use item on
+    const characterId = prompt('Enter character ID to use item on:');
+    if (!characterId) return;
+
+    try {
+        const response = await apiClient.post('/shop/use', {
+            item_id: itemId,
+            character_id: parseInt(characterId)
+        });
+
+        if (response.success) {
+            alert(`✅ Used ${itemName}!`);
+            loadUserInventory();
+            loadCharacters(); // Refresh to show updated stats
+        }
+    } catch (error) {
+        alert('Error using item: ' + (error.response?.data?.error || error.message));
+    }
+}
+
+// My Eggs Modal
+function showMyEggsModal() {
+    document.getElementById('myEggsModal').style.display = 'block';
+    loadMyEggs();
+}
+
+function closeMyEggsModal() {
+    document.getElementById('myEggsModal').style.display = 'none';
+}
+
+async function loadMyEggs() {
+    try {
+        const response = await apiClient.get('/gacha/my-eggs');
+        const eggs = response.eggs || [];
+
+        const eggsGrid = document.getElementById('eggsList');
+        eggsGrid.innerHTML = '';
+
+        if (eggs.length === 0) {
+            eggsGrid.innerHTML = '<p>You have no eggs yet. Mint one!</p>';
+            return;
+        }
+
+        eggs.forEach(egg => {
+            const eggCard = document.createElement('div');
+            eggCard.className = 'egg-card';
+
+            const isHatched = egg.hatched_at !== null;
+            const isIncubating = egg.incubation_started_at !== null && !isHatched;
+            const canHatch = isIncubating && isEggReady(egg);
+
+            let statusHTML = '';
+            if (isHatched) {
+                statusHTML = '<div class="egg-status">✅ Hatched</div>';
+            } else if (canHatch) {
+                statusHTML = '<div class="egg-ready">🎉 Ready to Hatch!</div>';
+            } else if (isIncubating) {
+                const remaining = getRemainingTime(egg);
+                statusHTML = `<div class="egg-timer">⏱️ ${remaining}</div>`;
+            } else {
+                statusHTML = '<div class="egg-status">🥚 Not Incubating</div>';
+            }
+
+            eggCard.innerHTML = `
+                <div class="item-icon">🥚</div>
+                <div class="item-name">${egg.rarity} ${egg.element} ${egg.character_type}</div>
+                <div class="item-description">Class: ${egg.class}</div>
+                ${statusHTML}
+                ${!isHatched && !isIncubating ? `<button class="use-btn" onclick="startIncubation(${egg.id})">Start Incubation</button>` : ''}
+                ${canHatch ? `<button class="hatch-btn" onclick="hatchEgg(${egg.id})">Hatch Now!</button>` : ''}
+            `;
+            eggsGrid.appendChild(eggCard);
+        });
+    } catch (error) {
+        console.error('Error loading eggs:', error);
+    }
+}
+
+function isEggReady(egg) {
+    if (!egg.incubation_started_at) return false;
+
+    const startTime = new Date(egg.incubation_started_at);
+    const now = new Date();
+    const hoursElapsed = (now - startTime) / (1000 * 60 * 60);
+
+    return hoursElapsed >= egg.effective_incubation_time;
+}
+
+function getRemainingTime(egg) {
+    const startTime = new Date(egg.incubation_started_at);
+    const now = new Date();
+    const hoursElapsed = (now - startTime) / (1000 * 60 * 60);
+    const remaining = egg.effective_incubation_time - hoursElapsed;
+
+    if (remaining <= 0) return 'Ready!';
+
+    const hours = Math.floor(remaining);
+    const minutes = Math.floor((remaining - hours) * 60);
+
+    return `${hours}h ${minutes}m remaining`;
+}
+
+async function startIncubation(eggId) {
+    try {
+        const response = await apiClient.post(`/gacha/start-incubation/${eggId}`);
+
+        if (response.success) {
+            alert('✅ Incubation started!');
+            loadMyEggs();
+        }
+    } catch (error) {
+        alert('Error starting incubation: ' + (error.response?.data?.error || error.message));
+    }
+}
+
+async function hatchEgg(eggId) {
+    try {
+        const response = await apiClient.post(`/gacha/hatch/${eggId}`);
+
+        if (response.success) {
+            const character = response.character;
+            alert(`🎉 Egg Hatched!\n\nName: ${character.unique_name || character.name}\nRarity: ${character.rarity}\nHP: ${character.current_hp}\nATK: ${character.current_attack}\nDEF: ${character.current_defense}\nSPD: ${character.current_speed}`);
+            loadMyEggs();
+            loadCharacters(); // Refresh character list
+        }
+    } catch (error) {
+        alert('Error hatching egg: ' + (error.response?.data?.error || error.message));
+    }
+}
+
+// Close modals when clicking outside
+window.onclick = function (event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}

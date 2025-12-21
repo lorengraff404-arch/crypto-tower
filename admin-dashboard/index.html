@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #343a40;
+            color: white;
+        }
+
+        .sidebar a {
+            color: #cfd8dc;
+            text-decoration: none;
+            display: block;
+            padding: 10px 20px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #495057;
+            color: white;
+        }
+
+        .card-stat {
+            border-left: 5px solid;
+        }
+
+        .card-stat.primary {
+            border-color: #0d6efd;
+        }
+
+        .card-stat.success {
+            border-color: #198754;
+        }
+
+        .card-stat.warning {
+            border-color: #ffc107;
+        }
+
+        .card-stat.danger {
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3 text-center border-bottom border-secondary">
+                    <h4>CTD Admin</h4>
+                    <small id="adminName">Loading...</small>
+                </div>
+                <nav class="mt-3">
+                    <a href="#" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+                    <a href="#"><i class="fas fa-users me-2"></i> Users</a>
+                    <a href="#"><i class="fas fa-cogs me-2"></i> Live Ops</a>
+                    <a href="#"><i class="fas fa-coins me-2"></i> Economy</a>
+                    <a href="#"><i class="fas fa-file-alt me-2"></i> Audit Logs</a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <h2 class="mb-4">System Overview</h2>
+
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm card-stat primary h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Users</h6>
+                                <h3 id="statTotalUsers">...</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm card-stat success h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Revenue Today (GTK)</h6>
+                                <h3 id="statRevenue">...</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm card-stat warning h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Active Battles</h6>
+                                <h3 id="statActiveBattles">...</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm card-stat danger h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Pending Reports</h6>
+                                <h3 id="statReports">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Tools -->
+                <div class="row">
+                    <!-- Ban Hammer -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-danger text-white">
+                                <i class="fas fa-gavel me-2"></i> User Action (Ban System)
+                            </div>
+                            <div class="card-body">
+                                <form id="banForm">
+                                    <div class="mb-3">
+                                        <label>User ID / Wallet</label>
+                                        <input type="text" class="form-control" id="banTarget" required>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col">
+                                            <label>Duration (Hours)</label>
+                                            <input type="number" class="form-control" id="banDuration" value="24">
+                                        </div>
+                                        <div class="col">
+                                            <label>Reason</label>
+                                            <select class="form-select" id="banReason">
+                                                <option value="CHEATING">Cheating / Botting</option>
+                                                <option value="TOXICITY">Toxicity</option>
+                                                <option value="ECONOMY_ABUSE">Economy Abuse</option>
+                                                <option value="OTHER">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger w-100">Execute Ban</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Config -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-dark text-white">
+                                <i class="fas fa-sliders-h me-2"></i> Live Configuration
+                            </div>
+                            <div class="card-body">
+                                <form id="configForm">
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-4 col-form-label">Global XP Rate</label>
+                                        <div class="col-sm-8">
+                                            <input type="number" step="0.1" class="form-control" value="1.0">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-4 col-form-label">Market Fee (%)</label>
+                                        <div class="col-sm-8">
+                                            <input type="number" class="form-control" value="5">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-sm-4 col-form-label">Maintenance Mode</label>
+                                        <div class="col-sm-8">
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary w-100">Update Config</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Logic to connect to Backend API
+        const API_URL = "http://localhost:8080/api/v1";
+        // Mock Auth for Demo (Real impl would use JWT from localStorage)
+        const token = localStorage.getItem('token');
+
+        document.getElementById('banForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const target = document.getElementById('banTarget').value;
+            const duration = parseInt(document.getElementById('banDuration').value);
+            const reason = document.getElementById('banReason').value;
+
+            try {
+                const res = await fetch(`${API_URL}/admin/ban`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ target_id: parseInt(target), reason, duration })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('User Banned Successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network Panic: ' + err.message);
+            }
+        });
+
+        // Initial Load
+        async function loadStats() {
+            if (!token) return; // Silent fail if not logged in
+            try {
+                const res = await fetch(`${API_URL}/revenue/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Wire up stats
+                    document.getElementById('statRevenue').innerText = (data.total_revenue_gtk || 0).toLocaleString();
+                    document.getElementById('statTotalUsers').innerText = (data.total_users || 0).toLocaleString();
+                    document.getElementById('statActiveBattles').innerText = (data.active_battles || 0).toLocaleString();
+
+                    // Optional: If we had a reports endpoint
+                    // document.getElementById('statReports').innerText = data.pending_reports || '0';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Check Auth
+        if (!token) {
+            document.body.innerHTML = '<div class="container mt-5 text-center"><h3>Access Denied</h3><p>Please log in via the main game first with an Admin account.</p></div>';
+        } else {
+            loadStats();
+        }
+    </script>
+</body>
+
+</html>

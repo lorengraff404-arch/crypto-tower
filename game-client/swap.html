@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Swap - TOWER ↔ GTK</title>
+    <link rel="stylesheet" href="css/main.css">
+    <!-- Import Inter font to match game.html -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #FFD700;
+            --bg-dark: #0f172a;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .swap-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 0;
+            /* Header is separate now */
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .swap-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px 30px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .swap-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .swap-header p {
+            margin: 5px 0 0 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .swap-body {
+            padding: 30px;
+        }
+
+        .network-warning {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        /* Token Input Section */
+        .token-input-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .token-input-container:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .token-label-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .token-input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-input-field {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Inter', monospace;
+            outline: none;
+            width: 100%;
+        }
+
+        .token-input-field::placeholder {
+            color: rgba(148, 163, 184, 0.3);
+        }
+
+        .token-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .token-badge.tower {
+            color: #FFD700;
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .token-badge.gtk {
+            color: #60a5fa;
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .balance-display {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .balance-display span {
+            color: white;
+            margin-left: 4px;
+            font-weight: 600;
+        }
+
+        .max-btn {
+            background: rgba(102, 126, 234, 0.2);
+            color: #818cf8;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 800;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .max-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Swap Divider */
+        .swap-divider {
+            position: relative;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .swap-direction-btn {
+            background: #1e293b;
+            border: 4px solid #131b2e;
+            /* Match approximate bg color */
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .swap-direction-btn:hover {
+            transform: rotate(180deg);
+            background: var(--primary);
+            color: white;
+            border-color: #1e293b;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+        }
+
+        .info-value {
+            color: white;
+            font-weight: 600;
+        }
+
+        .liquidity-box {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+        }
+
+        /* Action Button */
+        .action-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            /* Default primary red like game buttons? Or keep purple? user said "adjust to what we have" -> game.html uses red for raids, purple for chart. Let's stick to the swap brand color (Purple/Blue) used in header */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .action-button:disabled {
+            background: #334155;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: text-bottom;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="swap-card">
+        <div class="swap-header">
+            <h1>Token Swap</h1>
+            <p>Exchange TOWER ↔ GTK instantly</p>
+        </div>
+
+        <div class="swap-body">
+            <div id="networkWarning" class="network-warning" style="display: none;">
+                <span style="font-size: 20px;">⚠️</span>
+                <div>
+                    <strong style="color: #ef4444;">Wrong Network</strong><br>
+                    Please switch to opBNB Testnet (Chain ID: 5611)
+                </div>
+            </div>
+
+            <!-- FROM -->
+            <div class="token-input-container">
+                <div class="token-label-row">
+                    <span>From</span>
+                    <div class="balance-display">
+                        Balance: <span id="fromBalance">0.00</span>
+                        <button class="max-btn" onclick="setMax()">MAX</button>
+                    </div>
+                </div>
+                <div class="token-input-row">
+                    <input type="number" id="fromAmount" class="token-input-field" placeholder="0.0" min="0"
+                        step="0.01">
+                    <div class="token-badge tower" id="fromBadge">
+                        <span>🏰 TOWER</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SWAP DIR -->
+            <div class="swap-divider">
+                <button class="swap-direction-btn" onclick="swapDirection()">⇅</button>
+            </div>
+
+            <!-- TO -->
+            <div class="token-input-container">
+                <div class="token-label-row">
+                    <span>To (Estimated)</span>
+                    <div class="balance-display">
+                        Balance: <span id="toBalance">0.00</span>
+                    </div>
+                </div>
+                <div class="token-input-row">
+                    <input type="number" id="toAmount" class="token-input-field" placeholder="0.0" readonly>
+                    <div class="token-badge gtk" id="toBadge">
+                        <span>💎 GTK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Exchange Rate</span>
+                    <span class="info-value" id="exchangeRate">1 TOWER = 100 GTK</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">You Receive</span>
+                    <span class="info-value" id="receiveAmount">0.00 GTK</span>
+                </div>
+                <div class="liquidity-box">
+                    <div class="info-row">
+                        <span class="info-label">Protocol Liquidity</span>
+                    </div>
+                    <div class="info-row" style="margin-top: 4px;">
+                        <span style="color: #FFD700;">🏰 <span id="contractTower">...</span></span>
+                        <span style="color: #60a5fa;">💎 <span id="contractGTK">...</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUTTON -->
+            <button class="action-button" id="swapBtn" onclick="executeSwap()">
+                Connect Wallet
+            </button>
+
+            <div id="swapError"
+                style="margin-top: 12px; text-align: center; color: #ef4444; font-size: 13px; font-weight: 600; display: none;">
+            </div>
+
+            <a href="game.html" class="back-link">
+                ← Back to Game Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Web3.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <script src="js/wallet.js"></script>
+    <script type="module">
+        import { BLOCKCHAIN_CONFIG, switchToOpBNB, checkNetwork } from './dist/js/blockchain.js';
+        import { getTowerBalance, getGTKBalance, watchBalance } from './dist/js/balance.js';
+
+        let walletAddress = null;
+        let swapDirection = 'TOWER_TO_GTK';
+        const RATIO = 100;
+        // Deployed SimpleTokenSwap contract
+        const SWAP_CONTRACT = '0x67E29D8d8f6F69d10D0965CBB59C750119C3b8f8';
+
+        // Extended ABIs
+        const ERC20_ABI = [
+            { "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
+            { "inputs": [{ "name": "_owner", "type": "address" }, { "name": "_spender", "type": "address" }], "name": "allowance", "outputs": [{ "name": "remaining", "type": "uint256" }], "type": "function" },
+            { "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
+        ];
+
+        const SWAP_ABI = [
+            { "inputs": [{ "name": "towerAmount", "type": "uint256" }], "name": "swapTowerForGTK", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [{ "name": "gtkAmount", "type": "uint256" }], "name": "swapGTKForTower", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initializeSwap();
+        });
+
+        async function initializeSwap() {
+            walletAddress = localStorage.getItem('wallet_address');
+
+            // Check button state driven by wallet connection
+            const btn = document.getElementById('swapBtn');
+            if (!walletAddress) {
+                btn.textContent = '🔌 Connect Wallet';
+                btn.onclick = () => window.location.href = 'index.html';
+                return;
+            } else {
+                btn.textContent = '🔄 Swap Tokens';
+                btn.onclick = executeSwap;
+            }
+
+            const isCorrectNetwork = await checkNetwork();
+            if (!isCorrectNetwork) {
+                document.getElementById('networkWarning').style.display = 'flex';
+                btn.disabled = true;
+                btn.textContent = '⚠️ Wrong Network';
+                return; // Stop here until resolved
+            }
+
+            await updateBalances();
+            await updateLiquidity(); // Check contract funds
+
+            watchBalance(walletAddress, (balances) => {
+                updateUIBalances(balances);
+            });
+
+            document.getElementById('fromAmount').addEventListener('input', calculateToAmount);
+
+            // Auto refresh liquidity every 30s
+            setInterval(updateLiquidity, 30000);
+        }
+
+        async function updateLiquidity() {
+            try {
+                if (!window.ethereum) return;
+                const web3 = new Web3(window.ethereum);
+                const towerContract = new web3.eth.Contract(ERC20_ABI, BLOCKCHAIN_CONFIG.contracts.TOWER);
+                const gtkContract = new web3.eth.Contract(ERC20_ABI, BLOCKCHAIN_CONFIG.contracts.GTK);
+
+                const towerBal = await towerContract.methods.balanceOf(SWAP_CONTRACT).call();
+                const gtkBal = await gtkContract.methods.balanceOf(SWAP_CONTRACT).call();
+
+                document.getElementById('contractTower').textContent = parseFloat(web3.utils.fromWei(towerBal, 'ether')).toLocaleString() + ' TOWER';
+                document.getElementById('contractGTK').textContent = parseFloat(web3.utils.fromWei(gtkBal, 'ether')).toLocaleString() + ' GTK';
+
+                // Store for validation
+                window.contractLiquidity = {
+                    tower: parseFloat(web3.utils.fromWei(towerBal, 'ether')),
+                    gtk: parseFloat(web3.utils.fromWei(gtkBal, 'ether'))
+                };
+            } catch (err) {
+                console.error("Error fetching liquidity:", err);
+            }
+        }
+
+        async function updateBalances() {
+            try {
+                const towerBalance = await getTowerBalance(walletAddress);
+                const gtkBalance = await getGTKBalance(walletAddress);
+                updateUIBalances({ tower: towerBalance, gtk: gtkBalance });
+            } catch (error) {
+                console.error('Error fetching balances:', error);
+            }
+        }
+
+        function updateUIBalances(balances) {
+            if (swapDirection === 'TOWER_TO_GTK') {
+                document.getElementById('fromBalance').textContent = parseFloat(balances.tower).toFixed(2);
+                document.getElementById('toBalance').textContent = parseFloat(balances.gtk).toFixed(2);
+            } else {
+                document.getElementById('fromBalance').textContent = parseFloat(balances.gtk).toFixed(2);
+                document.getElementById('toBalance').textContent = parseFloat(balances.tower).toFixed(2);
+            }
+        }
+
+        function calculateToAmount() {
+            const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+            let toAmount;
+
+            if (swapDirection === 'TOWER_TO_GTK') {
+                toAmount = fromAmount * RATIO;
+                document.getElementById('receiveAmount').textContent = toAmount.toFixed(2) + ' GTK';
+            } else {
+                toAmount = fromAmount / RATIO;
+                document.getElementById('receiveAmount').textContent = toAmount.toFixed(6) + ' TOWER';
+            }
+
+            document.getElementById('toAmount').value = toAmount.toFixed(swapDirection === 'TOWER_TO_GTK' ? 2 : 6);
+            checkLiquidity(toAmount);
+        }
+
+        function checkLiquidity(neededAmount) {
+            const btn = document.getElementById('swapBtn');
+            const errorDiv = document.getElementById('swapError');
+
+            if (!window.contractLiquidity) return;
+            if (btn.textContent.includes('Connect') || btn.textContent.includes('Wrong')) return;
+
+            const isTowerToGTK = swapDirection === 'TOWER_TO_GTK';
+            const liquidity = isTowerToGTK ? window.contractLiquidity.gtk : window.contractLiquidity.tower;
+            const tokenName = isTowerToGTK ? 'GTK' : 'TOWER';
+
+            if (neededAmount > liquidity) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `⚠️ Insufficient Protocol Liquidity. Contract only has ${liquidity.toLocaleString()} ${tokenName}.`;
+            } else {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        window.setMax = function () {
+            const maxBalance = document.getElementById('fromBalance').textContent;
+            document.getElementById('fromAmount').value = maxBalance;
+            calculateToAmount();
+        }
+
+        window.swapDirection = function () {
+            swapDirection = swapDirection === 'TOWER_TO_GTK' ? 'GTK_TO_TOWER' : 'TOWER_TO_GTK';
+            const fromBadge = document.getElementById('fromBadge');
+            const toBadge = document.getElementById('toBadge');
+
+            if (swapDirection === 'TOWER_TO_GTK') {
+                fromBadge.className = 'token-badge tower';
+                fromBadge.innerHTML = '<span>🏰 TOWER</span>';
+                toBadge.className = 'token-badge gtk';
+                toBadge.innerHTML = '<span>💎 GTK</span>';
+                document.getElementById('exchangeRate').textContent = '1 TOWER = 100 GTK';
+            } else {
+                fromBadge.className = 'token-badge gtk';
+                fromBadge.innerHTML = '<span>💎 GTK</span>';
+                toBadge.className = 'token-badge tower';
+                toBadge.innerHTML = '<span>🏰 TOWER</span>';
+                document.getElementById('exchangeRate').textContent = '100 GTK = 1 TOWER';
+            }
+
+            document.getElementById('fromAmount').value = '';
+            document.getElementById('toAmount').value = '';
+            document.getElementById('receiveAmount').textContent = '0.00 ' + (swapDirection === 'TOWER_TO_GTK' ? 'GTK' : 'TOWER');
+
+            updateBalances();
+        }
+
+        window.executeSwap = async function () {
+            const fromAmount = parseFloat(document.getElementById('fromAmount').value);
+            if (!fromAmount || fromAmount <= 0) return alert('Enter a valid amount');
+
+            const btn = document.getElementById('swapBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
+
+                const web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                const from = accounts[0];
+                const amountWei = web3.utils.toWei(fromAmount.toString(), 'ether');
+
+                const swapContract = new web3.eth.Contract(SWAP_ABI, SWAP_CONTRACT);
+
+                // Determine source token
+                const tokenAddress = swapDirection === 'TOWER_TO_GTK'
+                    ? BLOCKCHAIN_CONFIG.contracts.TOWER
+                    : BLOCKCHAIN_CONFIG.contracts.GTK;
+
+                const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+
+                // 1. Check Allowance
+                const allowance = await tokenContract.methods.allowance(from, SWAP_CONTRACT).call();
+
+                if (BigInt(allowance) < BigInt(amountWei)) {
+                    btn.innerHTML = '📝 Approving...';
+                    await tokenContract.methods.approve(SWAP_CONTRACT, amountWei).send({ from });
+                    btn.innerHTML = '<span class="loading-spinner"></span> Approved! Swapping...';
+                }
+
+                // 2. Simulate Transaction
+                const method = swapDirection === 'TOWER_TO_GTK'
+                    ? swapContract.methods.swapTowerForGTK(amountWei)
+                    : swapContract.methods.swapGTKForTower(amountWei);
+
+                try {
+                    await method.estimateGas({ from });
+                } catch (gasError) {
+                    console.error("Gas simulation failed:", gasError);
+                    let msg = "Transaction would fail. ";
+                    if (gasError.message.includes("Too frequent")) msg += "Wait 1 minute between swaps.";
+                    else if (gasError.message.includes("Insufficient")) msg += "Contract out of liquidity.";
+                    else msg += "Check your balance and limits.";
+                    throw new Error(msg);
+                }
+
+                // 3. Execute Swap
+                btn.innerHTML = '🔄 Confirm in Metamask...';
+                const tx = await method.send({ from });
+
+                console.log('Swap success:', tx.transactionHash);
+                alert(`✅ Swap Complete! Tx: ${tx.transactionHash.substring(0, 10)}...`);
+
+                await updateBalances();
+                await updateLiquidity();
+                document.getElementById('fromAmount').value = '';
+                calculateToAmount();
+
+            } catch (error) {
+                console.error('Swap Error:', error);
+                alert('❌ ' + (error.message || "Swap failed"));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    </script>
+</body>
+
+</html>

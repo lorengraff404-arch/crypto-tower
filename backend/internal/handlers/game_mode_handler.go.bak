@@ -1,0 +1,212 @@
+package handlers
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/lorengraff/crypto-tower-defense/internal/services"
+)
+
+// GameModeHandler handles game mode HTTP requests
+type GameModeHandler struct {
+	gameModeService *services.GameModeService
+}
+
+// NewGameModeHandler creates a new game mode handler
+func NewGameModeHandler() *GameModeHandler {
+	return &GameModeHandler{
+		gameModeService: services.NewGameModeService(),
+	}
+}
+
+// ============================================
+// FREE/PvE MODE ENDPOINTS
+// ============================================
+
+// CreateFreeBattle creates a casual free battle
+// POST /api/v1/game-modes/free/create
+func (h *GameModeHandler) CreateFreeBattle(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		IsAI bool `json:"is_ai"` // true = fight AI, false = find player
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	battle, err := h.gameModeService.CreateFreeBattle(userID.(uint), req.IsAI)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"battle":  battle,
+		"message": "Free battle created! No stakes, just fun!",
+	})
+}
+
+// ============================================
+// RANKED MODE ENDPOINTS
+// ============================================
+
+// CreateRankedBattle creates a ranked competitive battle
+// POST /api/v1/game-modes/ranked/create
+func (h *GameModeHandler) CreateRankedBattle(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	battle, err := h.gameModeService.CreateRankedBattle(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"battle":  battle,
+		"message": "Ranked battle created! Your ELO is on the line!",
+	})
+}
+
+// UpdateRankedELO updates ELO after ranked battle
+// POST /api/v1/game-modes/ranked/:id/update-elo
+func (h *GameModeHandler) UpdateRankedELO(c *gin.Context) {
+	battleID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid battle ID"})
+		return
+	}
+
+	var req struct {
+		WinnerID uint `json:"winner_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if err := h.gameModeService.UpdateRankedELO(uint(battleID), req.WinnerID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ELO ratings updated!",
+	})
+}
+
+// ============================================
+// WAGER MODE ENDPOINTS
+// ============================================
+
+// FindWagerOpponent finds opponent for wager battle
+// POST /api/v1/game-modes/wager/find-opponent
+func (h *GameModeHandler) FindWagerOpponent(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		BetAmount int64 `json:"bet_amount" binding:"required,min=1000,max=10000"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bet amount must be between 1000 and 10000 GTK"})
+		return
+	}
+
+	opponent, err := h.gameModeService.FindWagerOpponent(userID.(uint), req.BetAmount)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"opponent": gin.H{
+			"id":         opponent.ID,
+			"level":      opponent.Level,
+			"rank":       opponent.Rank,
+			"rank_tier":  opponent.RankTier,
+			"pvp_wins":   opponent.PvPWins,
+			"pvp_losses": opponent.PvPLosses,
+		},
+		"message": "Opponent found! Ready to wager!",
+	})
+}
+
+// CreateWagerBattle creates a high-stakes wager battle
+// POST /api/v1/game-modes/wager/create
+func (h *GameModeHandler) CreateWagerBattle(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		OpponentID uint  `json:"opponent_id" binding:"required"`
+		BetAmount  int64 `json:"bet_amount" binding:"required,min=1000,max=10000"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	battle, err := h.gameModeService.CreateWagerBattle(userID.(uint), req.OpponentID, req.BetAmount)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"battle":  battle,
+		"message": "Wager battle created! Both players' bets have been escrowed. Winner takes all!",
+	})
+}
+
+// ============================================
+// COMMON ENDPOINTS
+// ============================================
+
+// GetGameModeInfo returns information about a game mode
+// GET /api/v1/game-modes/:mode/info
+func (h *GameModeHandler) GetGameModeInfo(c *gin.Context) {
+	mode := c.Param("mode")
+
+	info := h.gameModeService.GetGameModeInfo(mode)
+
+	c.JSON(http.StatusOK, info)
+}
+
+// GetAllGameModes returns information about all game modes
+// GET /api/v1/game-modes
+func (h *GameModeHandler) GetAllGameModes(c *gin.Context) {
+	modes := []string{"FREE_PVE", "RANKED", "WAGER"}
+
+	allModes := make([]map[string]interface{}, 0)
+	for _, mode := range modes {
+		info := h.gameModeService.GetGameModeInfo(mode)
+		info["mode_id"] = mode
+		allModes = append(allModes, info)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"modes": allModes,
+		"count": len(allModes),
+	})
+}

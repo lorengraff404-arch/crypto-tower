@@ -1,0 +1,143 @@
+PASO 1: Agregar después de línea 860 (después de </div> del My Eggs Modal):
+
+    <!-- Marketplace Modal -->
+    <div id="marketplaceModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>🏪 Marketplace</h2>
+                <p style="color: #94a3b8; margin-top: 10px;">Buy and sell characters with TOWER</p>
+            </div>
+            <div class="modal-body">
+                <div id="marketplaceGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+                <div id="marketplaceLoading" style="text-align: center; padding: 40px; color: #94a3b8;">Loading...</div>
+                <div id="marketplaceEmpty" style="display: none; text-align: center; padding: 40px; color: #94a3b8;">No listings</div>
+                <div class="modal-actions" style="margin-top: 30px;">
+                    <button class="action-btn" style="background: #64748b;" id="closeMarketplaceBtn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+PASO 2: Cambiar línea 642-645 (botón marketplace):
+DE:
+            <button class="action-btn action-btn-success" onclick="window.location.href='marketplace.html'"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                🏪 Marketplace
+            </button>
+
+A:
+            <button class="action-btn action-btn-success" id="marketplaceBtn"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                🏪 Marketplace
+            </button>
+
+PASO 3: Agregar al final del <script> (antes de </script>):
+
+        // Marketplace Modal
+        document.getElementById('marketplaceBtn').addEventListener('click', () => {
+            document.getElementById('marketplaceModal').style.display = 'flex';
+            loadMarketplace();
+        });
+
+        document.getElementById('closeMarketplaceBtn').addEventListener('click', () => {
+            document.getElementById('marketplaceModal').style.display = 'none';
+        });
+
+        async function loadMarketplace() {
+            try {
+                document.getElementById('marketplaceLoading').style.display = 'block';
+                document.getElementById('marketplaceEmpty').style.display = 'none';
+                document.getElementById('marketplaceGrid').innerHTML = '';
+
+                const response = await apiClient.get('/marketplace');
+                let listings = response.listings || [];
+                
+                // DEDUPLICATION by character_id
+                const seenCharacterIds = new Set();
+                listings = listings.filter(listing => {
+                    if (listing.character_id) {
+                        if (seenCharacterIds.has(listing.character_id)) return false;
+                        seenCharacterIds.add(listing.character_id);
+                    }
+                    return true;
+                });
+
+                document.getElementById('marketplaceLoading').style.display = 'none';
+
+                if (listings.length === 0) {
+                    document.getElementById('marketplaceEmpty').style.display = 'block';
+                    return;
+                }
+
+                const currentUserId = userData?.id;
+                const grid = document.getElementById('marketplaceGrid');
+                
+                grid.innerHTML = listings.map(listing => {
+                    const char = listing.character;
+                    if (!char) return '';
+
+                    const isOwner = currentUserId && listing.seller_id === currentUserId;
+                    const rarityColors = {
+                        'SSS': '#FFD700', 'SS': '#E535AB', 'S': '#9333EA',
+                        'A': '#3B82F6', 'B': '#10b981', 'C': '#6b7280'
+                    };
+
+                    return `
+                        <div style="background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; margin-bottom: 10px;">
+                                <div style="font-size: 3em;">${getCharacterEmoji(char.character_type)}</div>
+                                <h3 style="margin: 10px 0; color: #1e293b;">${char.name || char.character_type} #${char.id}</h3>
+                                <span style="background: ${rarityColors[char.rarity] || '#6b7280'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700;">${char.rarity}</span>
+                                <span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-left: 5px;">Lv ${char.level}</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; font-size: 13px;">
+                                <div><strong>⚔️ ATK:</strong> ${char.current_attack}</div>
+                                <div><strong>🛡️ DEF:</strong> ${char.current_defense}</div>
+                                <div><strong>❤️ HP:</strong> ${char.current_hp}</div>
+                                <div><strong>⚡ SPD:</strong> ${char.current_speed}</div>
+                            </div>
+                            <div style="text-align: center; margin: 10px 0;">
+                                <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">${isOwner ? '<strong>Your Listing</strong>' : `Seller: #${listing.seller_id}`}</div>
+                                <div style="font-size: 24px; color: #f39c12; font-weight: 700;">💰 ${listing.price.toLocaleString()} TOWER</div>
+                            </div>
+                            ${isOwner ? `
+                                <button onclick="cancelMarketplaceListing(${listing.id})" style="width: 100%; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                    ❌ Cancel Listing
+                                </button>
+                            ` : `
+                                <button onclick="buyMarketplaceListing(${listing.id})" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                    Buy with TOWER
+                                </button>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading marketplace:', error);
+                document.getElementById('marketplaceLoading').innerHTML = '<div style="color: #ef4444;">Failed to load marketplace</div>';
+            }
+        }
+
+        window.buyMarketplaceListing = async function(listingId) {
+            if (!confirm('Confirm purchase with TOWER tokens?')) return;
+            try {
+                await apiClient.post(`/marketplace/${listingId}/buy`);
+                alert('Purchase successful!');
+                loadMarketplace();
+            } catch (error) {
+                alert('Purchase failed: ' + error.message);
+            }
+        };
+
+        window.cancelMarketplaceListing = async function(listingId) {
+            if (!confirm('Cancel this listing?')) return;
+            try {
+                await apiClient.delete(`/marketplace/${listingId}`);
+                alert('Listing cancelled!');
+                loadMarketplace();
+                loadCharacters(); // Refresh to show character back in inventory
+            } catch (error) {
+                alert('Cancel failed: ' + error.message);
+            }
+        };

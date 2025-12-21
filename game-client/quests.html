@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tower Defense - Missions</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ui-utils.css">
+    <link rel="stylesheet" href="css/quests.css">
+</head>
+
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>Mission Control</h1>
+            <div class="user-stats">
+                <span id="user-level">Level: --</span>
+                <span id="user-xp">XP: --</span>
+                <span id="missions-complete">Missions: 0/30</span>
+            </div>
+            <button onclick="window.location.href='index.html'" class="btn-back">← Back to Home</button>
+        </header>
+
+        <!-- Aria Dialogue Box -->
+        <div id="aria-dialogue" class="dialogue-box hidden">
+            <div class="dialogue-content">
+                <div class="character-portrait">
+                    <div class="portrait-frame">
+                        <span class="portrait-icon">🧙‍♀️</span>
+                    </div>
+                    <div class="character-name">Aria</div>
+                    <div class="character-status" id="aria-corruption">
+                        <span class="corruption-bar">
+                            <span class="corruption-fill" style="width: 0%"></span>
+                        </span>
+                        <span class="corruption-text">Corruption: 0%</span>
+                    </div>
+                </div>
+                <div class="dialogue-text">
+                    <p id="dialogue-content"></p>
+                    <button onclick="closeDialogue()" class="btn-dialogue">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission List -->
+        <div class="missions-container">
+            <div class="missions-sidebar">
+                <h2>Available Missions</h2>
+                <div id="mission-list" class="mission-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Mission Detail Panel -->
+            <div class="mission-detail" id="mission-detail">
+                <div class="mission-detail-empty">
+                    <span class="empty-icon">📜</span>
+                    <p>Select a mission to view details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Start Confirmation Modal -->
+        <div id="start-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Start Mission?</h2>
+                <p id="start-mission-name"></p>
+                <div class="modal-actions">
+                    <button onclick="confirmStartMission()" class="btn-primary">Start</button>
+                    <button onclick="closeStartModal()" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Complete Modal -->
+        <div id="complete-modal" class="modal hidden">
+            <div class="modal-content reward-display">
+                <h2>Mission Complete!</h2>
+                <div class="mission-complete-animation">
+                    <span class="celebration-icon">🎉</span>
+                </div>
+                <div id="rewards-container" class="rewards-grid">
+                    <!-- Rewards populated by JS -->
+                </div>
+                <div id="unlock-notification" class="unlock-alert hidden">
+                    <strong>Feature Unlocked:</strong> <span id="unlock-feature"></span>
+                </div>
+                <button onclick="closeCompleteModal()" class="btn-primary">Collect Rewards</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/wallet.js"></script>
+    <script type="module" src="dist/js/ui-utils.js"></script>
+    <script type="module" src="dist/js/quests.js"></script>
+</body>
+
+</html>
