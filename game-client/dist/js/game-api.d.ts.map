@@ -1,0 +1,1 @@
+{"version":3,"file":"game-api.d.ts","sourceRoot":"","sources":["../../js/game-api.ts"],"names":[],"mappings":"AAQA,eAAO,MAAM,OAAO;2BACK,OAAO;8BAGI,MAAM;qCAGC,MAAM,aAAa,MAAM;;;;;8BAShC,MAAM,EAAE,aAAa,MAAM;gCAGzB,MAAM;;CAM3C,CAAC;AAIF,OAAO,CAAC,MAAM,CAAC;IACX,UAAU,MAAM;QAAG,OAAO,EAAE,OAAO,OAAO,CAAC;KAAE;CAChD"}

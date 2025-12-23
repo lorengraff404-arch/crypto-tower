@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Anti-Cheat Monitor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reusing consistent admin styles */
+        :root {
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1f2937;
+            --header-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            color: var(--text-primary);
+        }
+
+        /* Simplified for single file view - usually would import shared CSS */
+        .container {
+            padding: 2rem;
+            width: 100%;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .bg-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .bg-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header-flex">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 700;">🛡️ Anti-Cheat Monitor</h1>
+                <p style="color: var(--text-secondary);">Real-time security alerts and suspicious activity log</p>
+            </div>
+            <button class="btn btn-danger" onclick="alert('System lockdown initiated!')"><i class="fas fa-lock"></i>
+                Emergency Lockdown</button>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">Suspicious Activities (Last 24h)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User ID</th>
+                        <th>Event Type</th>
+                        <th>Risk Level</th>
+                        <th>Details</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody">
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 2rem;">Loading security logs...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Placeholder for future API integration
+        // In real impl, this fetches from /api/v1/admin/security/logs
+        setTimeout(() => {
+            const logs = [
+                { time: '10:42 AM', user: 'User#8821', type: 'High APM Rate', risk: 'HIGH', details: '60 actions / sec detected in battle 992' },
+                { time: '09:15 AM', user: 'User#4421', type: 'Invalid Signature', risk: 'MEDIUM', details: 'Shop purchase signature mismatch' }
+            ];
+
+            const tbody = document.getElementById('logsBody');
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td>${log.time}</td>
+                    <td>${log.user}</td>
+                    <td><span style="font-weight:600">${log.type}</span></td>
+                    <td><span class="badge ${log.risk === 'HIGH' ? 'bg-red' : 'bg-yellow'}">${log.risk}</span></td>
+                    <td style="color: var(--text-secondary);">${log.details}</td>
+                    <td><button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background: #e5e7eb;">Investigate</button></td>
+                </tr>
+            `).join('');
+        }, 1000);
+    </script>
+</body>
+
+</html>

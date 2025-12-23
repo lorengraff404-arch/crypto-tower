@@ -38,6 +38,11 @@ type User struct {
 	OnChainGTKBalance int64      `gorm:"default:0" json:"on_chain_gtk_balance"`   // Last synced blockchain balance
 	LastSyncedAt      *time.Time `json:"last_synced_at"`
 
+	// PvP Stats
+	PvPWins          int `gorm:"default:0" json:"pvp_wins"`
+	PvPLosses        int `gorm:"default:0" json:"pvp_losses"`
+	CurrentWinStreak int `gorm:"default:0" json:"current_win_streak"`
+
 	// Inventory
 	Characters []Character     `gorm:"foreignKey:OwnerID" json:"-"`
 	Teams      []Team          `gorm:"foreignKey:UserID" json:"-"`

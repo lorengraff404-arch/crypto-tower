@@ -54,29 +54,50 @@ func seedSkills() {
 }
 
 func seedShopItems() {
-	// Provide ID mapping to real items manually or verify name
 	shopItems := []models.ShopItem{
-		// Consumables
-		{Name: "Small Potion", Description: "Heals 50 HP", GTKCost: 100, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 50, MaxStack: 99, IsAvailable: true},
-		{Name: "Medium Potion", Description: "Heals 150 HP", GTKCost: 300, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 150, MaxStack: 99, IsAvailable: true},
-		{Name: "Large Potion", Description: "Heals 500 HP", GTKCost: 800, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 500, MaxStack: 99, IsAvailable: true},
-		{Name: "Revival Herb", Description: "Revives fainted character", GTKCost: 500, Category: "consumable", IsConsumable: true, EffectType: "revive", EffectValue: 50, MaxStack: 10, IsAvailable: true},
-		{Name: "Elixir of Energy", Description: "Restores 50 Energy", GTKCost: 200, Category: "consumable", IsConsumable: true, EffectType: "restore_energy", EffectValue: 50, MaxStack: 99, IsAvailable: true},
+		// Consumables - Healing
+		{Name: "Small Potion", Description: "Restores 50 HP", GTKCost: 100, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 50, IconURL: "🧪", IsAvailable: true},
+		{Name: "Medium Potion", Description: "Restores 150 HP", GTKCost: 300, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 150, IconURL: "🧴", IsAvailable: true},
+		{Name: "Large Potion", Description: "Restores 400 HP", GTKCost: 700, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 400, IconURL: "⚗️", IsAvailable: true},
+		{Name: "Mega Potion", Description: "Fully restores HP", GTKCost: 1500, Category: "consumable", IsConsumable: true, EffectType: "heal_hp", EffectValue: 9999, IconURL: "💊", IsAvailable: true},
+		{Name: "Revival Herb", Description: "Revives KO'd character", GTKCost: 2000, Category: "consumable", IsConsumable: true, EffectType: "revive", IconURL: "🌿", IsAvailable: true},
+		{Name: "Full Restore", Description: "Restores HP + all status", GTKCost: 2500, Category: "consumable", IsConsumable: true, EffectType: "full_heal", IconURL: "✨", IsAvailable: true},
+
+		// Status Cures
+		{Name: "Antidote", Description: "Cures Poison", GTKCost: 100, Category: "consumable", IsConsumable: true, EffectType: "cure_poison", IconURL: "💉", IsAvailable: true},
+		{Name: "Burn Heal", Description: "Cures Burn", GTKCost: 150, Category: "consumable", IsConsumable: true, EffectType: "cure_burn", IconURL: "🧊", IsAvailable: true},
+		{Name: "Ice Heal", Description: "Cures Freeze", GTKCost: 150, Category: "consumable", IsConsumable: true, EffectType: "cure_freeze", IconURL: "🔥", IsAvailable: true},
+		{Name: "Paralyze Heal", Description: "Cures Paralysis", GTKCost: 150, Category: "consumable", IsConsumable: true, EffectType: "cure_paralysis", IconURL: "⚡", IsAvailable: true},
 
 		// Equipment - Weapons
-		{Name: "Wooden Sword", Description: "Basic sword (+5 Atk)", GTKCost: 150, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 5, IsAvailable: true},
-		{Name: "Iron Sword", Description: "Standard sword (+15 Atk)", GTKCost: 500, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 15, IsAvailable: true},
-		{Name: "Steel Broadsword", Description: "Heavy sword (+30 Atk)", GTKCost: 1200, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 30, IsAvailable: true},
-		{Name: "Mithril Blade", Description: "Rare sword (+50 Atk)", GTKCost: 5000, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 50, IsAvailable: true},
+		{Name: "Bronze Dagger", Description: "Fast but weak (+3 Atk)", GTKCost: 80, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 3, IconURL: "🗡️", IsAvailable: true},
+		{Name: "Wooden Sword", Description: "Basic sword (+5 Atk)", GTKCost: 150, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 5, IconURL: "⚔️", IsAvailable: true},
+		{Name: "Iron Sword", Description: "Standard sword (+15 Atk)", GTKCost: 500, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 15, IconURL: "⚔️", IsAvailable: true},
+		{Name: "Steel Broadsword", Description: "Heavy sword (+35 Atk)", GTKCost: 1200, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 35, IconURL: "🗡️", IsAvailable: true},
+		{Name: "Mithril Blade", Description: "Magical sword (+60 Atk)", GTKCost: 5000, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 60, IconURL: "⚔️", IsAvailable: true},
+		{Name: "Dragon Bone Blade", Description: "Legendary weapon (+120 Atk)", GTKCost: 25000, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 120, IconURL: "🐉", IsAvailable: true},
+		{Name: "Crystal Staff", Description: "Focuses magical energy (+45 Atk)", GTKCost: 3500, Category: "weapon", IsConsumable: false, EffectType: "equip_atk", EffectValue: 45, IconURL: "🪄", IsAvailable: true},
 
-		// Equipment - Shields
-		{Name: "Wooden Shield", Description: "Basic shield (+3 Def)", GTKCost: 100, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 3, IsAvailable: true},
-		{Name: "Iron Buckler", Description: "Sturdy shield (+10 Def)", GTKCost: 400, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 10, IsAvailable: true},
-		{Name: "Tower Shield", Description: "Massive shield (+25 Def)", GTKCost: 1500, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 25, IsAvailable: true},
+		// Equipment - Armor/Defensive
+		{Name: "Leather Armor", Description: "Light protection (+5 Def)", GTKCost: 200, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 5, IconURL: "🦺", IsAvailable: true},
+		{Name: "Wooden Shield", Description: "Basic shield (+3 Def)", GTKCost: 100, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 3, IconURL: "🛡️", IsAvailable: true},
+		{Name: "Iron Buckler", Description: "Sturdy shield (+10 Def)", GTKCost: 400, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 10, IconURL: "🛡️", IsAvailable: true},
+		{Name: "Steel Plate", Description: "Heavy protection (+30 Def)", GTKCost: 2000, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 30, IconURL: "🛡️", IsAvailable: true},
+		{Name: "Tower Shield", Description: "Massive defense (+50 Def)", GTKCost: 4500, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 50, IconURL: "🛡️", IsAvailable: true},
+		{Name: "Runite Guard", Description: "Enchanted armor (+85 Def)", GTKCost: 15000, Category: "armor", IsConsumable: false, EffectType: "equip_def", EffectValue: 85, IconURL: "💎", IsAvailable: true},
 
-		// Special
-		{Name: "TOWER Token", Description: "Premium Currency", GTKCost: 1000, Category: "currency", IsConsumable: false, IsAvailable: true},
-		{Name: "XP Scroll", Description: "Grants 1000 XP", GTKCost: 2000, Category: "consumable", IsConsumable: true, EffectType: "grant_xp", EffectValue: 1000, MaxStack: 99, IsAvailable: true},
+		// Egg Items (All under 'egg' category)
+		{Name: "Basic Nest", Description: "Simple incubation spot (-1h)", GTKCost: 200, Category: "egg", IsConsumable: true, EffectType: "accelerate", EffectValue: 60, IconURL: "🥚", IsAvailable: true},
+		{Name: "Advanced Incubator", Description: "High-tech warmth (-6h)", GTKCost: 1200, Category: "egg", IsConsumable: true, EffectType: "accelerate", EffectValue: 360, IconURL: "🔬", IsAvailable: true},
+		{Name: "Solar Heat Lamp", Description: "Extreme acceleration (-24h)", GTKCost: 4000, Category: "egg", IsConsumable: true, EffectType: "accelerate", EffectValue: 1440, IconURL: "☀️", IsAvailable: true},
+		{Name: "Time Skip Device", Description: "Skip all remaining time", GTKCost: 8000, Category: "egg", IsConsumable: true, EffectType: "instant_hatch", IconURL: "⏰", IsAvailable: true},
+		{Name: "Egg Scanner", Description: "View hidden egg stats", GTKCost: 1000, Category: "egg", IsConsumable: true, EffectType: "scan", IconURL: "🔍", IsAvailable: true},
+		{Name: "Trait Revealer", Description: "Show concealed traits", GTKCost: 1500, Category: "egg", IsConsumable: true, EffectType: "scan", IconURL: "👁️", IsAvailable: true},
+
+		// Special/Currency
+		{Name: "XP Scroll", Description: "Instant 500 XP to character", GTKCost: 750, Category: "currency", IsConsumable: true, EffectType: "grant_xp", EffectValue: 500, IconURL: "📜", IsAvailable: true},
+		{Name: "Master XP Scroll", Description: "Instant 2500 XP to character", GTKCost: 3000, Category: "currency", IsConsumable: true, EffectType: "grant_xp", EffectValue: 2500, IconURL: "📖", IsAvailable: true},
+		{Name: "TOWER Voucher", Description: "Redeemable for 10 TOWER", GTKCost: 10000, Category: "currency", IsConsumable: true, IconURL: "🎫", IsAvailable: true},
 	}
 	for _, s := range shopItems {
 		if err := db.DB.Where("name = ?", s.Name).FirstOrCreate(&s).Error; err != nil {

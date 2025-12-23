@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/lorengraff/crypto-tower-defense/internal/db"
@@ -52,6 +53,9 @@ func (s *CharacterService) CreateCharacter(ownerID uint, charType, element, rari
 		ManaRegenRate: manaRegen,
 	}
 
+	// Generate Visual Traits (Prompt for AI)
+	s.GenerateVisualTraits(character)
+
 	if err := db.DB.Create(character).Error; err != nil {
 		return nil, err
 	}
@@ -69,6 +73,49 @@ func (s *CharacterService) CreateCharacter(ownerID uint, charType, element, rari
 	}
 
 	return character, nil
+}
+
+// GenerateVisualTraits constructs the AI prompt and placeholder image
+func (s *CharacterService) GenerateVisualTraits(c *models.Character) {
+	// Construct the prompt
+	prompt := fmt.Sprintf("pixel art character, %s class, %s element, %s rarity, fantasy style, side view battler, game sprite", c.Class, c.Element, c.Rarity)
+
+	// Add details based on Element
+	switch c.Element {
+	case "FIRE":
+		prompt += ", burning aura, red and orange color palette"
+	case "WATER":
+		prompt += ", flowing water, blue and teal color palette"
+	case "GRASS":
+		prompt += ", vines and leaves, green and brown color palette"
+	case "ELECTRIC":
+		prompt += ", sparking lightning, yellow and purple color palette"
+	case "ICE":
+		prompt += ", frozen crystal, cyan and white color palette"
+	case "DRAGON":
+		prompt += ", scales and wings, majestic presence"
+	}
+
+	// Add details based on Class
+	switch c.Class {
+	case "Warrior":
+		prompt += ", yielding heavy sword, heavy armor"
+	case "Mage":
+		prompt += ", holding magical staff, flowing robes"
+	case "Archer":
+		prompt += ", holding bow, light leather armor"
+	case "Tank":
+		prompt += ", massive shield, plate armor"
+	case "Support":
+		prompt += ", holding relic, holy aura"
+	}
+
+	c.VisualTraits = prompt
+	c.SpriteGenStatus = "pending"
+
+	// Set Placeholder Image until Generation Complete
+	// In real system, this URL would be updated by a webhook from the Image Gen Service
+	c.ImageURL = fmt.Sprintf("https://api.crypto-tower-defense.com/assets/placeholders/%s_%s.png", c.Element, c.Class)
 }
 
 // AssignDefaultMoves gives a character 4 basic moves based on element (Phase 10.3 Fix)

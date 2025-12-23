@@ -113,18 +113,59 @@ func (s *RevenueService) recordDistribution(dist models.RevenueDistribution) err
 }
 
 func (s *RevenueService) GetRevenueStats() (map[string]interface{}, error) {
-	// Simple stats for Dashboard
+	// 1. Total Revenue
 	var totalRevenue float64
-	// Sum total_amount from revenue_distributions
 	s.db.QueryRow("SELECT COALESCE(SUM(total_amount), 0) FROM revenue_distributions").Scan(&totalRevenue)
+
+	// 2. Fund Aggregates
+	var growthFund, securityFund, operations, rewardsPool, devTeam, towerLiquidity float64
+	s.db.QueryRow(`
+		SELECT 
+			COALESCE(SUM(growth_fund), 0), 
+			COALESCE(SUM(security_fund), 0), 
+			COALESCE(SUM(operations), 0), 
+			COALESCE(SUM(rewards_pool), 0), 
+			COALESCE(SUM(dev_team), 0), 
+			COALESCE(SUM(tower_liquidity), 0) 
+		FROM revenue_distributions
+	`).Scan(&growthFund, &securityFund, &operations, &rewardsPool, &devTeam, &towerLiquidity)
+
+	// 3. Recent Distributions
+	rows, err := s.db.Query(`
+		SELECT tx_hash, source, total_amount, created_at 
+		FROM revenue_distributions 
+		ORDER BY created_at DESC LIMIT 10
+	`)
+	distributions := []map[string]interface{}{}
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var txHash, source string
+			var amount float64
+			var date time.Time
+			if err := rows.Scan(&txHash, &source, &amount, &date); err == nil {
+				distributions = append(distributions, map[string]interface{}{
+					"tx_hash": txHash,
+					"source":  source,
+					"amount":  amount,
+					"date":    date,
+				})
+			}
+		}
+	}
 
 	var totalCirculation int64
 	s.gdb.Model(&models.User{}).Select("COALESCE(SUM(gtk_balance), 0)").Scan(&totalCirculation)
 
 	return map[string]interface{}{
-		"total_revenue":     totalRevenue,
+		"total_distributed": totalRevenue,
+		"growth_fund":       growthFund,
+		"security_fund":     securityFund,
+		"operations":        operations,
+		"rewards_pool":      rewardsPool,
+		"dev_team":          devTeam,
+		"tower_liquidity":   towerLiquidity,
+		"distributions":     distributions,
 		"gtk_circulation":   totalCirculation,
-		"last_distribution": time.Now(), // Placeholder
-		"active_funds":      []string{"Growth", "Security", "Operations", "Rewards", "Dev", "Liquidity"},
 	}, nil
 }

@@ -1,0 +1,61 @@
+No files changed, compilation skipped
+Warning: Detected artifacts built from source files that no longer exist. Run `forge clean` to make sure builds are in sync with project files.
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/GameTokenSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/CharacterNFTSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/TowerTokenSecure.sol
+Script ran successfully.
+
+== Logs ==
+  Deploying contracts with: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+  Deployer balance: 48855999935
+  
+=== Deploying GameToken ===
+  GameToken deployed to: 0xFb0a39aE8c44a0E83a1445d4d272294345fA2207
+  GTK Total Supply: 1000000 tokens
+  
+=== Deploying TowerToken ===
+  TowerToken deployed to: 0x4300536b909FbA47e042fCa31B97c09F64643110
+  TOWER Total Supply: 1000000 tokens
+  
+=== Deploying CharacterNFT ===
+  CharacterNFT deployed to: 0xe3765f851977Ed7B377D0234e9275845fc960775
+  
+=== Deploying ItemNFT ===
+  ItemNFT deployed to: 0x8467806e70FbE05Ca5e17f5d316C09F5bD2391bC
+  
+=== Setting up permissions ===
+  GTK: Authorized deployer as minter (10K/day)
+  TOWER: Authorized deployer as minter (1K/day)
+  CharacterNFT: Authorized deployer as minter (10/day)
+  ItemNFT: Authorized deployer as minter
+  
+=== Deployment Complete ===
+  GameToken: 0xFb0a39aE8c44a0E83a1445d4d272294345fA2207
+  TowerToken: 0x4300536b909FbA47e042fCa31B97c09F64643110
+  CharacterNFT: 0xe3765f851977Ed7B377D0234e9275845fc960775
+  ItemNFT: 0x8467806e70FbE05Ca5e17f5d316C09F5bD2391bC
+  
+Deployment addresses saved to .deployments.env
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 5611
+
+Estimated gas price: 0.001 gwei
+
+Estimated total gas used for script: 18502683
+
+Estimated amount required: 0.000018502683 BNB
+
+==========================
+
+Transactions saved to: /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/broadcast/Deploy.s.sol/5611/run-latest.json
+
+Sensitive values saved to: /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/cache/Deploy.s.sol/5611/run-latest.json
+
+Error: Failed to send transaction after 4 attempts Err(server returned an error response: error code -32000: insufficient funds for gas * price + value: balance 48855999935, tx cost 120324000065, overshot 71468000130)
+
+Context:
+- server returned an error response: error code -32000: insufficient funds for gas * price + value: balance 48855999935, tx cost 118148000065, overshot 69292000130

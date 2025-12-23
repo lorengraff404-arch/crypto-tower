@@ -26,15 +26,22 @@ func (s *AbilityService) GetAbilitiesByClass(class string) ([]models.Ability, er
 }
 
 // GetAvailableAbilities returns abilities a character can learn at their current level
+// SECURITY: Now includes rank-based filtering to prevent learning abilities above character's rank
 func (s *AbilityService) GetAvailableAbilities(characterID uint) ([]models.Ability, error) {
 	var character models.Character
 	if err := db.DB.First(&character, characterID).Error; err != nil {
 		return nil, err
 	}
 
-	// Get all abilities for this character's class up to their level
+	// Initialize restriction service
+	restrictionService := NewAbilityRestrictionService(GetConfigService())
+	learnableRarities := restrictionService.GetLearnableAbilityRarities(character.Rarity)
+
+	// Get all abilities for this character's class up to their level and within their rank
+	// SECURITY: Filter by class, level, AND rarity to prevent rank exploitation
 	var abilities []models.Ability
-	if err := db.DB.Where("class = ? AND unlock_level <= ?", character.Class, character.Level).
+	if err := db.DB.Where("class = ? AND unlock_level <= ? AND rarity IN ?",
+		character.Class, character.Level, learnableRarities).
 		Order("unlock_level ASC").Find(&abilities).Error; err != nil {
 		return nil, err
 	}
@@ -59,20 +66,25 @@ func (s *AbilityService) GetLearnedAbilities(characterID uint) ([]models.Ability
 }
 
 // AutoLearnAbilities automatically learns abilities when character levels up
+// SECURITY: Now enforces rank restrictions and slot limits for game balance
 func (s *AbilityService) AutoLearnAbilities(characterID uint, characterLevel int) ([]models.Ability, error) {
 	var character models.Character
 	if err := db.DB.First(&character, characterID).Error; err != nil {
 		return nil, err
 	}
 
+	// Initialize restriction service for validation
+	restrictionService := NewAbilityRestrictionService(GetConfigService())
+
 	// Get all abilities the character should have learned by now
+	// SECURITY: Only fetch abilities for character's own class to prevent ability theft
 	var availableAbilities []models.Ability
 	if err := db.DB.Where("class = ? AND unlock_level <= ?", character.Class, characterLevel).
-		Order("unlock_level ASC").Find(&availableAbilities).Error; err != nil {
+		Order("unlock_level ASC, rarity ASC").Find(&availableAbilities).Error; err != nil {
 		return nil, err
 	}
 
-	// Get already learned abilities
+	// Get already learned abilities to check slots
 	var learnedAbilityIDs []uint
 	var characterAbilities []models.CharacterAbility
 	if err := db.DB.Where("character_id = ?", characterID).
@@ -84,9 +96,23 @@ func (s *AbilityService) AutoLearnAbilities(characterID uint, characterLevel int
 		learnedAbilityIDs = append(learnedAbilityIDs, ca.AbilityID)
 	}
 
-	// Learn new abilities
+	// SECURITY: Check slot limit to prevent ability hoarding
+	maxSlots := restrictionService.GetMaxAbilitySlots(character.Rarity)
+	currentSlots := len(learnedAbilityIDs)
+
+	// Learn new abilities (with rank restrictions)
 	newlyLearned := []models.Ability{}
 	for _, ability := range availableAbilities {
+		// Check if slot limit reached
+		if currentSlots >= maxSlots {
+			break // Stop learning if slots are full
+		}
+
+		// SECURITY: Validate character can learn this ability rarity
+		if !restrictionService.CanLearnAbility(character.Rarity, ability.Rarity) {
+			continue // Skip abilities above character's rank
+		}
+
 		// Check if already learned
 		alreadyLearned := false
 		for _, learnedID := range learnedAbilityIDs {
@@ -106,6 +132,7 @@ func (s *AbilityService) AutoLearnAbilities(characterID uint, characterLevel int
 				return nil, err
 			}
 			newlyLearned = append(newlyLearned, ability)
+			currentSlots++ // Increment slot count
 		}
 	}
 
@@ -158,8 +185,8 @@ func (s *AbilityService) GetAbilityDetails(abilityID uint, characterElement stri
 	damage := s.CalculateAbilityDamage(&ability, characterElement)
 
 	return map[string]interface{}{
-		"ability":          ability,
+		"ability":           ability,
 		"calculated_damage": damage,
-		"element_bonus":    fmt.Sprintf("%.0f%%", (float64(damage)/float64(ability.BaseDamage)-1)*100),
+		"element_bonus":     fmt.Sprintf("%.0f%%", (float64(damage)/float64(ability.BaseDamage)-1)*100),
 	}, nil
 }

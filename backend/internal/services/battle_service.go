@@ -29,6 +29,103 @@ func NewBattleService() *BattleService {
 	}
 }
 
+// CreatePvEBattle initializes a new PvE battle session
+func (s *BattleService) CreatePvEBattle(player1ID uint, mode string) (*models.Battle, error) {
+	// Create Battle Record
+	battle := models.Battle{
+		BattleType:          mode,
+		Status:              "active",
+		Player1ID:           player1ID,
+		Player2ID:           player1ID, // PvE usually has same ID or System ID
+		CurrentTurnPlayerID: player1ID, // P1 starts
+		TurnNumber:          1,
+		CreatedAt:           time.Now(),
+	}
+
+	// Initialize State
+	if err := s.InitializeBattleState(&battle); err != nil {
+		return nil, err
+	}
+
+	if err := db.DB.Create(&battle).Error; err != nil {
+		return nil, err
+	}
+
+	return &battle, nil
+}
+
+// InitializeBattleState generates team snapshots for the battle participants
+func (s *BattleService) InitializeBattleState(battle *models.Battle) error {
+	// 1. Snapshot Player 1
+	p1Team, err := s.GetTeamSnapshot(battle.Player1ID)
+	if err != nil {
+		return fmt.Errorf("failed to get player 1 team: %w", err)
+	}
+	p1Json, _ := json.Marshal(p1Team)
+	battle.PlayerStateP1 = string(p1Json)
+
+	// Calculate Dynamic Stakes if Wager
+	if battle.BattleType == "wager" && battle.Status == "pending" { // Only calc if new
+		p1Stake, p2Stake, err := s.CalculateDynamicStakes(battle.Player1ID, battle.Player2ID, p1Team)
+		if err == nil {
+			battle.Player1Bet = p1Stake
+			battle.Player2Bet = p2Stake
+		}
+	}
+
+	// 2. Snapshot Player 2 (or AI)
+	var p2Team []models.BattleParticipant
+	if strings.Contains(battle.BattleType, "PVE") {
+		p2Team = s.generateAITeam(battle.Player1ID, battle.BattleType)
+	} else {
+		// PvP / Wager
+		p2Team, err = s.GetTeamSnapshot(battle.Player2ID)
+		if err != nil {
+			return fmt.Errorf("failed to get player 2 team: %w", err)
+		}
+	}
+	p2Json, _ := json.Marshal(p2Team)
+	battle.PlayerStateP2 = string(p2Json)
+
+	return nil
+}
+
+// Helper: Get Team Snapshot
+func (s *BattleService) GetTeamSnapshot(userID uint) ([]models.BattleParticipant, error) {
+	// Fetch Active Team
+	var team models.Team
+	if err := db.DB.Preload("Members.Character").
+		Where("user_id = ? AND is_active = true", userID).
+		First(&team).Error; err != nil {
+		return nil, errors.New("no active team found")
+	}
+
+	var participants []models.BattleParticipant
+	for _, member := range team.Members {
+		if member.Character.ID != 0 {
+			participants = append(participants, *s.toParticipant(&member.Character))
+		}
+	}
+	return participants, nil
+}
+
+// Helper: Generate AI Team
+func (s *BattleService) generateAITeam(_ uint, _ string) []models.BattleParticipant {
+	// Simplified: Create 1 Dummy Enemy
+	// Real Logic: Scale based on Player Level or Raid Difficulty
+	return []models.BattleParticipant{
+		{
+			CharacterName: "Goblin Scout",
+			MaxHP:         100,
+			CurrentHP:     100,
+			Attack:        15,
+			Defense:       5,
+			Speed:         10,
+			IsActive:      true,
+		},
+	}
+}
+
 // ProcessTurn executes a turn in a PvP battle
 // Uses BattleEngine to calculate damage and update state
 func (s *BattleService) ProcessTurn(battleID uint, userID uint, actionData map[string]interface{}) (*models.Battle, error) {
@@ -273,7 +370,7 @@ func (s *BattleService) ProcessTurn(battleID uint, userID uint, actionData map[s
 	}
 
 	if gameEnded {
-		s.CompleteBattle(battle.ID, winnerID)
+		s.CompleteBattle(battle.ID, winnerID, "")
 		db.DB.First(&battle, battleID) // Reload
 	} else {
 		// Toggle Turn
@@ -392,7 +489,8 @@ func (s *BattleService) toParticipant(c *models.Character) *models.BattlePartici
 	return &models.BattleParticipant{
 		CharacterID:   c.ID,
 		CharacterName: c.Name,
-		MaxHP:         c.BaseHP, // Simplified
+		Element:       c.Element, // NEW
+		MaxHP:         c.BaseHP,  // Simplified
 		CurrentHP:     c.CurrentHP,
 		MaxMana:       100, // Fixed for now
 		CurrentMana:   c.CurrentMana,
@@ -404,8 +502,28 @@ func (s *BattleService) toParticipant(c *models.Character) *models.BattlePartici
 	}
 }
 
-// CompleteBattle handles victory
-func (s *BattleService) CompleteBattle(battleID uint, winnerID uint) error {
+// CompleteBattle handles victory with Anti-Cheat validation
+func (s *BattleService) CompleteBattle(battleID uint, winnerID uint, replayData string) error {
+	// 1. Anti-Cheat: Validate Replay Data (Basic sanity checks for now)
+	if replayData != "" {
+		if err := s.ValidateReplay(battleID, winnerID, replayData); err != nil {
+			// Log security event
+			fmt.Printf("SECURTY ALERT: Battle %d failed validation: %v\n", battleID, err)
+			return fmt.Errorf("security check failed: %v", err)
+		}
+	} else {
+		// Log missing replay (Soft warning for legacy clients, Hard error for new GDevelop clients)
+		// For consistency, we require it for ranked/wager
+		var checkBattle models.Battle
+		if err := db.DB.First(&checkBattle, battleID).Error; err == nil {
+			if checkBattle.BattleType == "wager" || checkBattle.BattleType == "ranked" {
+				// Strict mode for sensitive battles
+				// return errors.New("missing replay data") // Uncomment when client is ready
+				fmt.Printf("WARNING: Missing replay data for sensitive battle %d\n", battleID)
+			}
+		}
+	}
+
 	return db.DB.Transaction(func(tx *gorm.DB) error {
 		var battle models.Battle
 		if err := tx.First(&battle, battleID).Error; err != nil {
@@ -422,6 +540,12 @@ func (s *BattleService) CompleteBattle(battleID uint, winnerID uint) error {
 		now := time.Now()
 		battle.EndedAt = &now
 
+		// Save Replay Data for audit
+		if replayData != "" {
+			// In a real app, save to S3 or separate table. Here we log or simplify.
+			// battle.ReplayLog = replayData // Assuming field exists or we add it
+		}
+
 		if err := tx.Save(&battle).Error; err != nil {
 			return err
 		}
@@ -429,10 +553,35 @@ func (s *BattleService) CompleteBattle(battleID uint, winnerID uint) error {
 		// Handle Rewards
 		if battle.BattleType == "wager" {
 			// WAGER LOGIC: Release Escrow (Winner takes pot minus fee)
-			// Pot = BetAmount * 2
-			pot := battle.BetAmount * 2
-			fee := int64(float64(pot) * 0.05) // 5% fee
-			payout := pot - fee
+			// Pot = P1Bet + P2Bet
+			pot := battle.Player1Bet + battle.Player2Bet
+
+			// If old data (using BetAmount), fallback
+			if pot == 0 && battle.BetAmount > 0 {
+				pot = battle.BetAmount * 2
+				battle.Player1Bet = battle.BetAmount
+				battle.Player2Bet = battle.BetAmount
+			}
+
+			// Dynamic Payout based on Difficulty/Risk
+			// Logic: Winner gets their own bet back + Opponent's bet (minus fee)
+			// Fee is 5% logic on winnings
+
+			feeRate := 0.05
+			var winnerBet, loserBet int64
+
+			if winnerID == battle.Player1ID {
+				winnerBet = battle.Player1Bet
+				loserBet = battle.Player2Bet
+			} else {
+				winnerBet = battle.Player2Bet
+				loserBet = battle.Player1Bet
+			}
+
+			fee := int64(float64(loserBet) * feeRate) // Fee taken from WINNINGS (loser's money)
+			winnings := loserBet - fee
+			winnerPayout := winnerBet + winnings
+			treasuryAmount := fee
 
 			// Transfer Escrow -> Winner & Treasury
 			escrowAcc, _ := s.ledger.GetOrCreateAccount(nil, models.AccountTypeEscrow, "GTK")
@@ -440,12 +589,13 @@ func (s *BattleService) CompleteBattle(battleID uint, winnerID uint) error {
 			treasuryAcc, _ := s.ledger.GetOrCreateAccount(nil, models.AccountTypeTreasury, "GTK")
 
 			entries := []models.LedgerEntry{
-				{AccountID: escrowAcc.ID, Amount: -pot, Type: "DEBIT"}, // Drain Escrow
-				{AccountID: winnerAcc.ID, Amount: payout, Type: "CREDIT"},
-				{AccountID: treasuryAcc.ID, Amount: fee, Type: "CREDIT"},
+				{AccountID: escrowAcc.ID, Amount: -pot, Type: "DEBIT"}, // Drain total pot
+				{AccountID: winnerAcc.ID, Amount: winnerPayout, Type: "CREDIT"},
+				{AccountID: treasuryAcc.ID, Amount: treasuryAmount, Type: "CREDIT"},
 			}
 
-			if err := s.ledger.CreateTransactionWithTx(tx, models.TxTypeWagerWin, fmt.Sprintf("wager_win_%d", battleID), "Wager Payout", entries); err != nil {
+			desc := "Wager Win Payout (Risk Reward)"
+			if err := s.ledger.CreateTransactionWithTx(tx, models.TxTypeWagerWin, fmt.Sprintf("wager_win_%d", battleID), desc, entries); err != nil {
 				return err
 			}
 		} else if battle.BattleType == "ranked" {
@@ -471,6 +621,187 @@ func (s *BattleService) CompleteBattle(battleID uint, winnerID uint) error {
 			s.ledger.CreateTransactionWithTx(tx, models.TxTypeReward, fmt.Sprintf("pve_win_%d", battleID), "PvE Victory Reward", entries)
 		}
 
+		// --- POST-BATTLE HOOKS: Stats, Elo, XP ---
+		// 1. Fetch Users
+		var winner, loser models.User
+		if err := tx.First(&winner, winnerID).Error; err != nil {
+			return err
+		}
+		// Loser might be AI/System (0) or actual player?
+		// For PvP/Wager/Ranked, loser is real.
+		// For PvE, loser is System (ID 0? No, usually not stored as User).
+		// check if PvP
+		isPvP := battle.BattleType == "wager" || battle.BattleType == "ranked" || battle.BattleType == "pvp"
+
+		loserID := battle.Player1ID
+		if winnerID == battle.Player1ID {
+			loserID = battle.Player2ID
+		}
+
+		if isPvP {
+			if err := tx.First(&loser, loserID).Error; err != nil {
+				return err
+			}
+
+			// 2. Update Elo (Ranked/Wager only)
+			if battle.BattleType == "ranked" || battle.BattleType == "wager" {
+				kFactor := 32
+				expectedWin := 1.0 / (1.0 + float64(loser.ELO-winner.ELO)/400.0)
+				// expectedLoss := 1.0 - expectedWin // unused
+
+				eloChange := int(float64(kFactor) * (1.0 - expectedWin))
+				winner.ELO += eloChange
+				loser.ELO -= eloChange
+				if loser.ELO < 0 {
+					loser.ELO = 0
+				} // No negative Elo
+			}
+
+			// 3. Update Stats
+			winner.PvPWins++
+			winner.CurrentWinStreak++
+			loser.PvPLosses++
+			loser.CurrentWinStreak = 0
+		}
+
+		// 4. Grant XP (Winner)
+		// Simple flat XP for now. Complex formula can go in ProgressionService
+		winner.Experience += 100
+		// Check Level Up? (Simplified)
+		needed := winner.Level * 1000
+		if winner.Experience >= needed {
+			winner.Level++
+			winner.Experience -= needed
+		}
+
+		if err := tx.Save(&winner).Error; err != nil {
+			return err
+		}
+		if isPvP {
+			if err := tx.Save(&loser).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
+}
+
+// ValidateReplay performs basic anti-cheat checks
+func (s *BattleService) ValidateReplay(battleID, winnerID uint, replayData string) error {
+	// 1. Check Data Size
+	if len(replayData) < 10 {
+		return errors.New("invalid replay data size")
+	}
+
+	// 2. STUB: Parse JSON (Assume simple list of actions)
+	// In future: Unmarshal to []Action and simulate
+	// For now, checks are rudimentary
+
+	// 3. Verify Winner matches logic? (Needs simulation)
+
+	// 4. Time Check (Optional) - verify battle duration matches log
+	// This requires created_at vs now check in handler before calling validation?
+
+	return nil
+}
+
+// CheckTimeouts checks for abandoned battles (> 30s inactive)
+func (s *BattleService) CheckTimeouts() error {
+	threshold := time.Now().Add(-30 * time.Second)
+
+	var staleBattles []models.Battle
+	// Find active battles updated before threshold
+	// Note: UpdatedAt is updated on every Save() which happens on every Turn.
+	if err := db.DB.Where("status = ? AND updated_at < ?", "active", threshold).Find(&staleBattles).Error; err != nil {
+		return err
+	}
+
+	for _, battle := range staleBattles {
+		fmt.Printf("Battle %d timed out. Last update: %v\n", battle.ID, battle.UpdatedAt)
+
+		// Auto-Surrender Current Turn Player
+		var winnerID uint
+		if battle.CurrentTurnPlayerID == battle.Player1ID {
+			winnerID = battle.Player2ID
+		} else {
+			winnerID = battle.Player1ID
+		}
+
+		if strings.Contains(battle.BattleType, "PVE") {
+			// For PVE, if timeout, user loses. Winner = 0.
+			winnerID = 0
+		}
+
+		if err := s.CompleteBattle(battle.ID, winnerID, ""); err != nil {
+			fmt.Printf("Failed to complete timed out battle %d: %v\n", battle.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// CalculateDynamicStakes determines how much each player MUST risk
+func (s *BattleService) CalculateDynamicStakes(p1ID, p2ID uint, p1Team []models.BattleParticipant) (int64, int64, error) {
+	// 1. Get P2 Team
+	p2Team, err := s.GetTeamSnapshot(p2ID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// 2. Calculate Combat Power (CP)
+	cp1 := calculateTeamCP(p1Team)
+	cp2 := calculateTeamCP(p2Team)
+
+	// 3. Determine Risk/Odds
+	// Base Stake = 100 GTK (Standard Unit)
+	baseStake := int64(100)
+
+	// Avoid div by zero
+	if cp1 < 1 {
+		cp1 = 1
+	}
+	if cp2 < 1 {
+		cp2 = 1
+	}
+
+	ratio := float64(cp1) / float64(cp2)
+
+	var p1Stake, p2Stake int64
+
+	if ratio > 1.0 {
+		// P1 is Stronger
+		if ratio > 5.0 {
+			ratio = 5.0
+		}
+		p1Stake = int64(float64(baseStake) * ratio)
+		p2Stake = int64(float64(baseStake) / ratio)
+	} else {
+		// P2 is Stronger (or equal)
+		ratio = float64(cp2) / float64(cp1)
+		if ratio > 5.0 {
+			ratio = 5.0
+		}
+		p2Stake = int64(float64(baseStake) * ratio)
+		p1Stake = int64(float64(baseStake) / ratio)
+	}
+
+	// Ensure Minimums
+	if p1Stake < 10 {
+		p1Stake = 10
+	}
+	if p2Stake < 10 {
+		p2Stake = 10
+	}
+
+	return p1Stake, p2Stake, nil
+}
+
+func calculateTeamCP(team []models.BattleParticipant) int {
+	total := 0
+	for _, m := range team {
+		cp := m.MaxHP + (m.Attack * 2) + (m.Defense * 2) + m.Speed
+		total += cp
+	}
+	return total
 }

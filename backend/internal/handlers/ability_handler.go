@@ -11,12 +11,14 @@ import (
 // AbilityHandler handles ability HTTP requests
 type AbilityHandler struct {
 	abilityService *services.AbilityService
+	equipService   *services.AbilityEquipService
 }
 
 // NewAbilityHandler creates a new ability handler
 func NewAbilityHandler() *AbilityHandler {
 	return &AbilityHandler{
 		abilityService: services.NewAbilityService(),
+		equipService:   services.NewAbilityEquipService(),
 	}
 }
 
@@ -114,4 +116,117 @@ func (h *AbilityHandler) GetAbilityDetails(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, details)
+}
+
+// ==================== ABILITY LOADOUT ENDPOINTS ====================
+
+// GetLearnedAbilities returns all abilities a character has learned (unlimited)
+// GET /api/v1/abilities/learned?character_id=123
+func (h *AbilityHandler) GetLearnedAbilities(c *gin.Context) {
+	characterIDStr := c.Query("character_id")
+	characterID, err := strconv.ParseUint(characterIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid character_id"})
+		return
+	}
+
+	abilities, err := h.equipService.GetLearnedAbilities(uint(characterID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load learned abilities"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"character_id": characterID,
+		"learned":      abilities,
+		"count":        len(abilities),
+	})
+}
+
+// GetEquippedAbilities returns currently equipped abilities for battle (slot-limited)
+// GET /api/v1/abilities/equipped?character_id=123
+func (h *AbilityHandler) GetEquippedAbilities(c *gin.Context) {
+	characterIDStr := c.Query("character_id")
+	characterID, err := strconv.ParseUint(characterIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid character_id"})
+		return
+	}
+
+	abilities, err := h.equipService.GetEquippedAbilities(uint(characterID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load equipped abilities"})
+		return
+	}
+
+	// Get slot mapping for UI
+	slotMap, _ := h.equipService.GetEquippedAbilitiesWithSlots(uint(characterID))
+
+	c.JSON(http.StatusOK, gin.H{
+		"character_id": characterID,
+		"equipped":     abilities,
+		"slots":        slotMap,
+		"count":        len(abilities),
+	})
+}
+
+// EquipAbility equips an ability to a specific slot
+// POST /api/v1/abilities/equip
+// Body: {"character_id": 123, "ability_id": 456, "slot": 1}
+func (h *AbilityHandler) EquipAbility(c *gin.Context) {
+	var req struct {
+		CharacterID uint `json:"character_id" binding:"required"`
+		AbilityID   uint `json:"ability_id" binding:"required"`
+		Slot        int  `json:"slot" binding:"required,min=1,max=16"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request: " + err.Error()})
+		return
+	}
+
+	// SECURITY: Verify user owns character (Handled by Service)
+	userID := c.GetUint("user_id")
+
+	err := h.equipService.EquipAbility(userID, req.CharacterID, req.AbilityID, req.Slot)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "ability equipped successfully",
+		"character_id": req.CharacterID,
+		"ability_id":   req.AbilityID,
+		"slot":         req.Slot,
+	})
+}
+
+// UnequipAbility removes an ability from equipment
+// DELETE /api/v1/abilities/unequip
+// Body: {"character_id": 123, "ability_id": 456}
+func (h *AbilityHandler) UnequipAbility(c *gin.Context) {
+	var req struct {
+		CharacterID uint `json:"character_id" binding:"required"`
+		AbilityID   uint `json:"ability_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	userID := c.GetUint("user_id")
+
+	err := h.equipService.UnequipAbility(userID, req.CharacterID, req.AbilityID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "ability unequipped successfully",
+		"character_id": req.CharacterID,
+		"ability_id":   req.AbilityID,
+	})
 }

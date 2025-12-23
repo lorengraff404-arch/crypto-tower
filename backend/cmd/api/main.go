@@ -7,6 +7,7 @@ import (
 	// Added by instruction
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin" // Added by instruction
+	"golang.org/x/time/rate"
 
 	// 	"github.com/lorengraff/crypto-tower-defense/internal/blockchain"
 	"github.com/lorengraff/crypto-tower-defense/internal/db"
@@ -88,7 +89,7 @@ func main() {
 
 	// Enterprise Services
 	ledgerService := services.NewLedgerService()
-	configService := services.NewConfigService()
+	configService := services.GetConfigService()
 	adminService := services.NewAdminService()
 
 	adminHandler := handlers.NewAdminHandler(adminService, configService)
@@ -141,7 +142,8 @@ func main() {
 		// Protected routes (require authentication)
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(cfg))
-		protected.Use(middleware.StandardRateLimiter()) // 100 req/min for normal operations
+		protected.Use(middleware.RateLimitMiddleware(rate.Limit(5), 10)) // 5 req/sec (burst 10)
+		protected.Use(middleware.StandardRateLimiter())                  // 100 req/min for normal operations
 		{
 			// Auth
 			protected.GET("/auth/profile", authHandler.GetProfile)
@@ -164,13 +166,18 @@ func main() {
 			protected.GET("/abilities/:id", abilityHandler.GetAbilityDetails)
 			protected.GET("/characters/:id/abilities", abilityHandler.GetCharacterAbilities)
 
+			// Ability Loadout Management (Learn vs Equip)
+			protected.GET("/abilities/learned", abilityHandler.GetLearnedAbilities)
+			protected.GET("/abilities/equipped", abilityHandler.GetEquippedAbilities)
+			protected.POST("/abilities/equip", abilityHandler.EquipAbility)
+			protected.DELETE("/abilities/unequip", abilityHandler.UnequipAbility)
+
 			// Skill System routes (Phase 20)
 			skillHandler := handlers.NewSkillHandler()
 			protected.POST("/skills/activate", skillHandler.ActivateSkill)
 			protected.GET("/characters/:id/active-skills", skillHandler.GetActiveSkills)
 			protected.POST("/characters/:id/swap-skill", skillHandler.SwapSkill)
 			protected.GET("/characters/:id/cooldowns", skillHandler.GetSkillCooldowns)
-			// protected.POST("/battles/:id/start-turn", skillHandler.StartTurn)
 
 			// Status Effect routes
 			statusEffectHandler := handlers.NewStatusEffectHandler()
@@ -186,24 +193,9 @@ func main() {
 			protected.DELETE("/teams/:id/members/:charId", teamHandler.RemoveTeamMember)
 
 			// Raid routes - NEW secure implementation
-			raidHandler := handlers.NewRaidHandler()
-			// We can reuse raidHandler if we put methods there, but currently split.
-			// Let's create RaidTurnHandler sharing the same service?
-			// Ideally refactor handlers to be one struct.
-			// For minimal change, init turn handler.
-
-			// Hack: RaidHandler in raid_handler.go creates a NEW service instance internally.
-			// RaidTurnHandler needs one too.
-			// Better: Expose the service from RaidHandler or create shared service.
-			// services.NewRaidService()
-
+			// Raid routes - NEW secure implementation
 			raidService := services.NewRaidService()
-			// Recreate RaidHandler with injection?
-			// Existing NewRaidHandler() creates generic. Let's rely on that for now or refactor.
-			// But NewRaidHandler doesn't take args.
-			// Creating both handlers separately means separate service instances.
-			// RaidService is stateless except for DB/Ledger, so it's SAFE to have 2 instances.
-
+			raidHandler := handlers.NewRaidHandler(raidService)
 			raidTurnHandler := handlers.NewRaidTurnHandler(raidService)
 
 			raids := protected.Group("/raids")
@@ -223,6 +215,10 @@ func main() {
 				ranked.POST("/ranked", rankedHandler.StartRanked)
 			}
 
+			// Leaderboard
+			leaderboardHandler := handlers.NewLeaderboardHandler() // NEW
+			protected.GET("/leaderboard", leaderboardHandler.GetLeaderboard)
+
 			// Wager Battle Endpoints (NEW - Real GTK)
 			wagerHandler := handlers.NewWagerHandler()
 			wager := protected.Group("/battle")
@@ -230,6 +226,7 @@ func main() {
 
 			{
 				wager.POST("/wager", wagerHandler.StartWager)
+				wager.POST("/wager/cancel", wagerHandler.CancelWager)
 			}
 
 			// Mission routes
@@ -262,8 +259,18 @@ func main() {
 
 			// Battle routes
 			battleHandler := handlers.NewBattleHandler() // NEW
+			// Standard Battle Management
+			protected.POST("/battles/matchmaking", battleHandler.FindMatch)
+			protected.POST("/battles", battleHandler.CreateBattle)
+			protected.GET("/battles/:id", battleHandler.GetBattle)
+			protected.GET("/battles/history", battleHandler.GetBattleHistory)
+
+			// Battle Actions
+			protected.POST("/battles/:id/start", battleHandler.StartBattle)
 			protected.POST("/battles/:id/turn", battleHandler.ProcessTurn)
 			protected.POST("/battles/:id/complete", battleHandler.CompleteBattle)
+			protected.POST("/battles/:id/surrender", battleHandler.SurrenderBattle)
+			protected.POST("/battles/:id/rematch", battleHandler.RequestRematch)
 
 			// Game Modes (Refactored to Raids/Ranked/Wager below)
 			// protected.GET("/game-modes", gameModeHandler.GetAllGameModes)
@@ -341,20 +348,49 @@ func main() {
 			protected.GET("/daily-quests", questHandler.GetDailyQuests)
 			protected.POST("/daily-quests/claim/:id", questHandler.ClaimQuestReward)
 			protected.POST("/daily-quests/refresh", questHandler.RefreshQuests) // Admin only
-		}
 
-		// Revenue routes (admin only)
-		v1.GET("/revenue/stats", middleware.AuthMiddleware(cfg), middleware.AdminMiddleware(cfg), revenueHandler.GetRevenueStats)
+			// Revenue routes (admin only)
+			protected.GET("/revenue/stats", middleware.AdminMiddleware(cfg), revenueHandler.GetRevenueStats)
 
-		// Admin Routes (Enterprise)
-		admin := v1.Group("/admin")
-		admin.Use(middleware.AuthMiddleware(cfg))
-		admin.Use(middleware.AdminMiddleware(cfg))
-		{
-			admin.POST("/ban", adminHandler.BanUser)
-			admin.GET("/settings", adminHandler.GetSettings)   // NEW
-			admin.PUT("/settings", adminHandler.UpdateSetting) // NEW
-			admin.GET("/revenue/stats", adminHandler.GetRevenueStats)
+			// Admin Routes - must be inside protected group
+			adminGroup := protected.Group("")
+			adminGroup.Use(middleware.AdminMiddleware(cfg))
+			{
+				// User Management
+				adminGroup.POST("/ban", adminHandler.BanUser)
+				adminGroup.POST("/unban", adminHandler.UnbanUser)
+				adminGroup.POST("/freeze-funds", adminHandler.FreezeFunds)
+				adminGroup.GET("/users", adminHandler.ListUsers)
+				adminGroup.GET("/audit-logs", adminHandler.GetAuditLogs)
+
+				// System Configuration
+				adminGroup.GET("/settings", adminHandler.GetSettings)
+				adminGroup.PUT("/settings", adminHandler.UpdateSetting)
+				adminGroup.GET("/admin-revenue-stats", adminHandler.GetRevenueStats)
+
+				// Shop Management
+				adminGroup.GET("/shop-items", adminHandler.GetAdminShopItems)
+				adminGroup.POST("/shop-items", adminHandler.CreateShopItem)
+				adminGroup.PUT("/shop-items", adminHandler.UpdateShopItem)
+				adminGroup.DELETE("/shop-items", adminHandler.DeleteShopItem)
+
+				// Quest Management
+				adminGroup.GET("/quests/templates", adminHandler.GetAdminQuestTemplates)
+				adminGroup.POST("/quests/templates", adminHandler.CreateQuestTemplate)
+				adminGroup.PUT("/quests/templates", adminHandler.UpdateQuestTemplate)
+				adminGroup.DELETE("/quests/templates", adminHandler.DeleteQuestTemplate)
+
+				// Ability Management (Admin CRUD - different path to avoid conflict)
+				adminGroup.GET("/admin-abilities", adminHandler.GetAbilities)
+				adminGroup.POST("/admin-abilities", adminHandler.CreateAbility)
+				adminGroup.PUT("/admin-abilities", adminHandler.UpdateAbility)
+				adminGroup.DELETE("/admin-abilities", adminHandler.DeleteAbility)
+
+				// Battle Management (Phase 17)
+				adminGroup.GET("/battles/active", adminHandler.GetActiveBattles)
+				adminGroup.GET("/battles/history", adminHandler.GetBattleHistory)
+				adminGroup.POST("/battles/:id/terminate", adminHandler.TerminateBattle)
+			}
 		}
 	}
 

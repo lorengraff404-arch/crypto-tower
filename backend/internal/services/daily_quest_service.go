@@ -23,32 +23,7 @@ func NewDailyQuestService() *DailyQuestService {
 	}
 }
 
-// Quest templates with scaling
-var questTemplates = []models.QuestTemplate{
-	// Combat Quests - The Way of the Warrior (40%)
-	{Type: "combat", Name: "Guardian of the Realm", Description: "Win %d battles using a Mono-Element team", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "rare", ActionType: "element_win"},
-	{Type: "combat", Name: "Warlord's Path", Description: "Achieve a win streak of %d battles", BaseTarget: 5, ScaleFactor: 0.3, Difficulty: "epic", ActionType: "win_streak"},
-	{Type: "combat", Name: "Flawless Victory", Description: "Win %d battles with full HP remaining", BaseTarget: 2, ScaleFactor: 0.1, Difficulty: "rare", ActionType: "perfect_win"},
-	{Type: "combat", Name: "Class Supremacy", Description: "Win %d battles using only one Class type", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "uncommon", ActionType: "class_win"},
-	{Type: "combat", Name: "Battle Hardened", Description: "Participate in %d battles", BaseTarget: 10, ScaleFactor: 0.5, Difficulty: "common", ActionType: "battle_participation"},
-
-	// Collection Quests - The Collector's Greed (30%)
-	{Type: "collection", Name: "Genetic Mastery", Description: "Hatch %d Eggs", BaseTarget: 1, ScaleFactor: 0.1, Difficulty: "uncommon", ActionType: "egg_hatched"},
-	{Type: "collection", Name: "Legend Seeker", Description: "Mint or Obtain %d Rare+ characters", BaseTarget: 1, ScaleFactor: 0, Difficulty: "epic", ActionType: "rare_obtain"},
-	{Type: "collection", Name: "Life Bringer", Description: "Start incubation for %d eggs", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "common", ActionType: "incubation_started"},
-	{Type: "collection", Name: "Army Expansion", Description: "Recruit %d new characters", BaseTarget: 5, ScaleFactor: 0.5, Difficulty: "uncommon", ActionType: "character_count"},
-
-	// Progression Quests - Rise to Power (20%)
-	{Type: "progression", Name: "Titan's Strength", Description: "Level up characters %d times", BaseTarget: 10, ScaleFactor: 1.0, Difficulty: "uncommon", ActionType: "level_up_count"},
-	{Type: "progression", Name: "Awakening Potential", Description: "Evolve %d characters", BaseTarget: 1, ScaleFactor: 0, Difficulty: "rare", ActionType: "evolution_completed"},
-	{Type: "progression", Name: "Merchant King", Description: "Earn %d GTK from marketplace sales", BaseTarget: 500, ScaleFactor: 50, Difficulty: "epic", ActionType: "marketplace_earn"},
-	{Type: "progression", Name: "Resource Hoarder", Description: "Accumulate %d GTK from battles", BaseTarget: 2000, ScaleFactor: 200, Difficulty: "uncommon", ActionType: "gtk_earned"},
-
-	// Special Quests - Mastery of Arts (10%)
-	{Type: "special", Name: "Tactical Genius", Description: "Win %d battles using items", BaseTarget: 5, ScaleFactor: 0.3, Difficulty: "uncommon", ActionType: "item_win"},
-	{Type: "special", Name: "Market Mover", Description: "List %d high-value items/chars", BaseTarget: 1, ScaleFactor: 0.1, Difficulty: "rare", ActionType: "marketplace_listed_rare"},
-	{Type: "special", Name: "Daily Dedication", Description: "Complete %d Daily Quests", BaseTarget: 3, ScaleFactor: 0, Difficulty: "legendary", ActionType: "daily_complete"},
-}
+// Quest templates are now stored in the database (QuestTemplate model)
 
 // Shop item IDs by rarity (these should match your shop items)
 var shopItemsByRarity = map[string][]int{
@@ -82,26 +57,32 @@ func (s *DailyQuestService) GenerateDailyQuests(userID uint, playerLevel int) er
 		return nil // User already has active quests
 	}
 
-	// Generate 5 quests: 2 combat, 1 collection, 1 progression, 1 special
-	questDistribution := []string{"combat", "combat", "collection", "progression", "special"}
+	// Generate 5 random quests from DB templates
+	var allTemplates []models.QuestTemplate
+	if err := db.DB.Find(&allTemplates).Error; err != nil {
+		return err
+	}
+
+	if len(allTemplates) == 0 {
+		return errors.New("no quest templates found in database")
+	}
+
+	// Shuffle templates
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(allTemplates), func(i, j int) {
+		allTemplates[i], allTemplates[j] = allTemplates[j], allTemplates[i]
+	})
+
+	// Take up to 5
+	count := 5
+	if len(allTemplates) < 5 {
+		count = len(allTemplates)
+	}
 
 	expiresAt := time.Now().Add(24 * time.Hour)
 
-	for _, questType := range questDistribution {
-		// Get templates of this type
-		var templates []models.QuestTemplate
-		for _, t := range questTemplates {
-			if t.Type == questType {
-				templates = append(templates, t)
-			}
-		}
-
-		if len(templates) == 0 {
-			continue
-		}
-
-		// Pick random template
-		template := templates[rand.Intn(len(templates))]
+	for i := 0; i < count; i++ {
+		template := allTemplates[i]
 
 		// Scale target based on player level
 		targetValue := template.BaseTarget + int(float64(playerLevel)*template.ScaleFactor)
@@ -112,16 +93,17 @@ func (s *DailyQuestService) GenerateDailyQuests(userID uint, playerLevel int) er
 		// Generate description with target
 		description := fmt.Sprintf(template.Description, targetValue)
 
-		// Get random reward item
+		// Get GTK/TOWER rewards from template
+		rewardGTK := template.RewardGTK
+		rewardTOWER := float64(template.RewardTOWER)
+
+		// Get random reward item ID (if difficulty matches)
 		items := shopItemsByRarity[template.Difficulty]
 		var rewardItemID *int
 		if len(items) > 0 {
 			itemID := items[rand.Intn(len(items))]
 			rewardItemID = &itemID
 		}
-
-		// Get GTK/TOWER rewards
-		rewards := rewardsByDifficulty[template.Difficulty]
 
 		quest := models.DailyQuest{
 			UserID:          userID,
@@ -132,8 +114,8 @@ func (s *DailyQuestService) GenerateDailyQuests(userID uint, playerLevel int) er
 			CurrentProgress: 0,
 			Difficulty:      template.Difficulty,
 			RewardItemID:    rewardItemID,
-			RewardGTK:       rewards.GTK,
-			RewardTOWER:     rewards.TOWER,
+			RewardGTK:       rewardGTK,
+			RewardTOWER:     rewardTOWER,
 			IsCompleted:     false,
 			IsClaimed:       false,
 			ExpiresAt:       expiresAt,
@@ -159,23 +141,25 @@ func (s *DailyQuestService) GetActiveQuests(userID uint) ([]models.DailyQuest, e
 
 // TrackProgress updates quest progress
 func (s *DailyQuestService) TrackProgress(userID uint, actionType string, increment int, metadata string) error {
-	// Find all active quests that match this action type
+	// Find all templates matching this action type to get their names
+	var matchingTemplates []models.QuestTemplate
+	if err := db.DB.Where("action_type = ?", actionType).Find(&matchingTemplates).Error; err != nil {
+		return err
+	}
+
+	if len(matchingTemplates) == 0 {
+		return nil // No templates track this action
+	}
+
+	var matchingNames []string
+	for _, t := range matchingTemplates {
+		matchingNames = append(matchingNames, t.Name)
+	}
+
+	// Find all active quests that match these names
 	var quests []models.DailyQuest
-
-	// Get quest templates to find matching action types
-	var matchingTypes []string
-	for _, template := range questTemplates {
-		if template.ActionType == actionType {
-			matchingTypes = append(matchingTypes, template.Name)
-		}
-	}
-
-	if len(matchingTypes) == 0 {
-		return nil // No quests track this action
-	}
-
 	err := db.DB.Where("user_id = ? AND quest_name IN ? AND is_completed = ? AND expires_at > ?",
-		userID, matchingTypes, false, time.Now()).Find(&quests).Error
+		userID, matchingNames, false, time.Now()).Find(&quests).Error
 
 	if err != nil {
 		return err

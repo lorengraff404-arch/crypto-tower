@@ -8,6 +8,7 @@ import (
 type BattleParticipant struct {
 	CharacterID   uint   `json:"character_id"`
 	CharacterName string `json:"character_name"`
+	Element       string `json:"element"` // NEW: For type effectiveness
 	TeamID        uint   `json:"team_id"`
 	Position      int    `json:"position"`  // 0-2 for 3v3
 	IsActive      bool   `json:"is_active"` // Currently in battle (not switched out)

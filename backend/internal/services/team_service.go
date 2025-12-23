@@ -53,6 +53,11 @@ func (s *TeamService) AddMember(teamID, characterID uint, slot int, isBackup boo
 		return errors.New("character does not belong to user")
 	}
 
+	// Check if character is listed on marketplace
+	if character.IsListed {
+		return errors.New("cannot add listed character to team")
+	}
+
 	// Validate slot
 	if isBackup {
 		if slot < 0 || slot > 2 {

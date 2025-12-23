@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lorengraff/crypto-tower-defense/internal/db"
+	"github.com/lorengraff/crypto-tower-defense/internal/models"
 	"github.com/lorengraff/crypto-tower-defense/internal/services"
 )
 
@@ -103,7 +105,7 @@ func (h *SkillHandler) SwapSkill(c *gin.Context) {
 	}
 
 	// Swap skill
-	if err := h.skillService.SwapActiveSkill(uint(characterID), req.OldAbilityID, req.NewAbilityID); err != nil {
+	if err := h.skillService.SwapActiveSkill(userID, uint(characterID), req.OldAbilityID, req.NewAbilityID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -133,38 +135,11 @@ func (h *SkillHandler) GetSkillCooldowns(c *gin.Context) {
 	})
 }
 
-// StartTurn handles POST /api/v1/battles/:id/start-turn
-// Regenerates mana and reduces cooldowns
-func (h *SkillHandler) StartTurn(c *gin.Context) {
-	var req struct {
-		CharacterID uint `json:"character_id" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Regenerate mana
-	if err := h.skillService.RegenerateMana(req.CharacterID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Reduce cooldowns
-	h.skillService.ReduceCooldowns(req.CharacterID)
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "turn started, mana regenerated, cooldowns reduced",
-	})
-}
-
 // Helper function to verify character ownership
 func (h *SkillHandler) verifyCharacterOwnership(userID, characterID uint) bool {
-	// This would query the database
-	// Simplified for now - always return true in development
-	_ = userID      // TODO: Implement actual ownership check
-	_ = characterID // TODO: Implement actual ownership check
-	return true
+	var count int64
+	db.DB.Model(&models.Character{}).
+		Where("id = ? AND owner_id = ?", characterID, userID).
+		Count(&count)
+	return count > 0
 }

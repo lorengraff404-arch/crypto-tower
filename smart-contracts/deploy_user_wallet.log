@@ -1,0 +1,16 @@
+No files changed, compilation skipped
+Warning: Detected artifacts built from source files that no longer exist. Run `forge clean` to make sure builds are in sync with project files.
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/TowerTokenSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/GameTokenSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/CharacterNFTSecure.sol
+Traces:
+  [15231968] → new DeployScript@0x9f7cF1d1F558E57ef88a59ac3D47214eF25B6A06
+    └─ ← [Return] 75921 bytes of code
+
+  [3096] DeployScript::run()
+    ├─ [0] VM::envUint("PRIVATE_KEY") [staticcall]
+    │   └─ ← [Revert] vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix ("0x") for hex string
+    └─ ← [Revert] vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix ("0x") for hex string
+
+
+Error: script failed: vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix ("0x") for hex string

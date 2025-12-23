@@ -1,0 +1,268 @@
+package db
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/lorengraff/crypto-tower-defense/internal/models"
+	"github.com/lorengraff/crypto-tower-defense/pkg/config"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+var DB *gorm.DB
+
+// Connect initializes database connection
+func Connect(cfg *config.Config) error {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		cfg.DBHost,
+		cfg.DBUser,
+		cfg.DBPassword,
+		cfg.DBName,
+		cfg.DBPort,
+	)
+
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+		NowFunc: func() time.Time {
+			return time.Now().UTC()
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	log.Println("Database connection established successfully")
+	return nil
+}
+
+// Migrate runs all database migrations
+// NOTE: AutoMigrate is DISABLED to prevent data loss
+// Use SQL migrations in backend/migrations/ instead
+func Migrate() error {
+	log.Println("⚠️  AutoMigrate is DISABLED - Using SQL migrations")
+	log.Println("📁 To apply fresh schema: psql -d tower_defense_dev < backend/migrations/001_initial_schema.sql")
+
+	// COMMENTED OUT - AutoMigrate wipes data on restart
+	/*
+		err := DB.AutoMigrate(
+			&models.User{},
+			&models.Character{},
+			&models.CharacterMove{},
+			&models.Battle{},
+			&models.BattleState{},
+			&models.MarketplaceListing{},
+			&models.Transaction{},
+			&models.Egg{},
+			&models.Equipment{},
+			&models.DailyQuest{},
+			&models.ShopItem{},
+			&models.Item{},
+			&models.UserInventory{},
+			&models.Mission{},
+			&models.Team{},
+			&models.TeamMember{},
+			&models.Island{},
+			&models.RaidBoss{},
+			&models.RaidSession{},
+			&models.Ability{},
+			&models.AbilityLearning{},
+			&models.CharacterLearnedAbility{},
+			&models.CharacterAbility{},
+			&models.CharacterActiveSkill{},
+			&models.CharacterSkillCooldown{},
+			&models.AbilityUsage{},
+			&models.CharacterStatusEffect{},
+			&models.CharacterBuff{},
+			&models.SpriteGenerationJob{},
+			&models.RevenueTransaction{},
+			&models.RevenueDistribution{},
+			&models.AdminAction{},
+			&models.AntiCheatFlag{},
+			&models.GameConfig{},
+			&models.AuditLog{},
+			&models.SystemSetting{},
+			&models.AdminAuditLog{},
+			&models.UserReport{},
+			&models.LedgerAccount{},
+			&models.LedgerTransaction{},
+			&models.LedgerEntry{},
+			&models.QuestTemplate{},
+		)
+		if err != nil {
+			return fmt.Errorf("migration failed: %w", err)
+		}
+	*/
+
+	// No migrations run - use SQL files instead
+	var err error = nil
+
+	log.Println("Database migrations completed successfully")
+
+	// Emergency: Ensure at least one SUPER_ADMIN exists for development
+	var adminCount int64
+	DB.Model(&models.User{}).Where("role IN ?", []string{"ADMIN", "SUPER_ADMIN"}).Count(&adminCount)
+	if adminCount == 0 {
+		log.Println("⚠️ No admins found. Promoting first user to SUPER_ADMIN...")
+		// Use master wallet specifically if possible
+		DB.Model(&models.User{}).Where("wallet_address = ?", "0xdCb8ca66Ae0809Eed5dB73E8e1c3787c8178327e").Update("role", "SUPER_ADMIN")
+		// Fallback to ID 1 if address not found
+		DB.Model(&models.User{}).Where("id = 1 AND role = 'PLAYER'").Update("role", "SUPER_ADMIN")
+	}
+
+	// Seed system settings
+	SeedSystemSettings(DB)
+
+	// Seed quest templates
+	if err := SeedQuestTemplates(DB); err != nil {
+		log.Printf("Warning: Failed to seed quest templates: %v", err)
+	} else {
+		log.Println("Quest templates seeded successfully")
+	}
+
+	// Seed missions (tutorial + progression)
+	if err := SeedMissions(DB); err != nil {
+		log.Printf("Warning: Failed to seed missions: %v", err)
+	} else {
+		log.Println("Missions seeded successfully")
+	}
+
+	// Seed abilities FIRST (required for ability_learning foreign keys)
+	if err := SeedAbilities(DB); err != nil {
+		log.Printf("Warning: Failed to seed abilities: %v", err)
+	} else {
+		log.Println("Abilities seeded successfully")
+	}
+
+	// Seed ability learning requirements
+	if err := SeedAbilityLearning(DB); err != nil {
+		log.Printf("Warning: Failed to seed ability learning: %v", err)
+	} else {
+		log.Println("Ability learning seeded successfully")
+	}
+
+	// Seed story dialogues
+	if err := SeedDialogues(DB); err != nil {
+		log.Printf("Warning: Failed to seed dialogues: %v", err)
+	} else {
+		log.Println("Story dialogues seeded successfully")
+	}
+
+	// Seed story fragments
+	if err := SeedStoryFragments(DB); err != nil {
+		log.Printf("Warning: Failed to seed story fragments: %v", err)
+	} else {
+		log.Println("Story fragments seeded successfully")
+	}
+
+	// Add indexes for performance
+	addIndexes()
+
+	return nil
+}
+
+// addIndexes creates additional indexes for query optimization
+func addIndexes() {
+	// User indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_users_level ON users(level)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_users_rank_tier ON users(rank_tier)")
+
+	// Character indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_characters_owner_type ON characters(owner_id, character_type)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_characters_rarity_level ON characters(rarity, level)")
+
+	// Battle indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_battles_created_at ON battles(created_at DESC)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_battles_type_status ON battles(battle_type, status)")
+
+	// Transaction indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_transactions_user_created ON transactions(user_id, created_at DESC)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_transactions_type_created ON transactions(transaction_type, created_at DESC)")
+
+	// Marketplace indexes
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_marketplace_status_price ON marketplace_listings(status, price)")
+	DB.Exec("CREATE INDEX IF NOT EXISTS idx_marketplace_asset_type_status ON marketplace_listings(asset_type, status)")
+
+	log.Println("Additional indexes created successfully")
+}
+
+// Close closes the database connection
+func Close() error {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}
+
+// SeedSystemSettings populates the system_settings table with defaults
+func SeedSystemSettings(db *gorm.DB) {
+	settings := []models.SystemSetting{
+		{Key: "xp_multiplier", Value: "1.0", Type: "float", Description: "Global XP gain multiplier"},
+		{Key: "gacha_cost_gtk", Value: "1000", Type: "int", Description: "Cost to mint a new egg (in GTK)"},
+		{Key: "wager_tax_percent", Value: "5", Type: "int", Description: "Platform tax on wager battles (%)"},
+		{Key: "marketplace_fee_percent", Value: "3", Type: "int", Description: "Fee for selling items in marketplace (%)"},
+		{Key: "energy_recovery_per_hour", Value: "10", Type: "int", Description: "Passive energy recovery rate"},
+		{Key: "maintenance_mode", Value: "false", Type: "bool", Description: "If true, blocks all game access"},
+		{Key: "min_withdrawal_gtk", Value: "5000", Type: "int", Description: "Minimum GTK required for withdrawal"},
+		{Key: "daily_login_reward", Value: "50", Type: "int", Description: "GTK reward for daily login"},
+		{Key: "base_catch_rate", Value: "0.25", Type: "float", Description: "Base rate for catching characters"},
+
+		// Battle Constants
+		{Key: "battle_crit_chance", Value: "0.10", Type: "float", Description: "Base critical hit chance (0.0-1.0)"},
+		{Key: "battle_crit_multiplier", Value: "1.5", Type: "float", Description: "Damage multiplier for critical hits"},
+		{Key: "battle_randomness_factor", Value: "0.10", Type: "float", Description: "Damage variation factor (±10%)"},
+		{Key: "battle_def_reduction_cap", Value: "0.75", Type: "float", Description: "Maximum damage reduction from defense (0.0-1.0)"},
+		{Key: "battle_mana_gain_per_turn", Value: "10", Type: "int", Description: "Mana gained at start of each turn"},
+		{Key: "battle_max_turns", Value: "50", Type: "int", Description: "Maximum turns before battle timeout"},
+
+		// Gacha & Incubation Constants
+		{Key: "gacha_daily_mint_limit", Value: "10", Type: "int", Description: "Maximum egg mints per day"},
+		{Key: "gacha_incubation_c", Value: "6", Type: "int", Description: "Incubation time for C rank (hours)"},
+		{Key: "gacha_incubation_b", Value: "12", Type: "int", Description: "Incubation time for B rank (hours)"},
+		{Key: "gacha_incubation_a", Value: "24", Type: "int", Description: "Incubation time for A rank (hours)"},
+		{Key: "gacha_incubation_s", Value: "48", Type: "int", Description: "Incubation time for S rank (hours)"},
+		{Key: "gacha_incubation_ss", Value: "72", Type: "int", Description: "Incubation time for SS rank (hours)"},
+		{Key: "gacha_incubation_sss", Value: "96", Type: "int", Description: "Incubation time for SSS rank (hours)"},
+		{Key: "gacha_shiny_rate", Value: "0.01", Type: "float", Description: "Base rate for shiny character generation"},
+		{Key: "gacha_egg_rarity_weights", Value: "{\"C\": 50, \"B\": 30, \"A\": 15, \"S\": 4, \"SS\": 0.9, \"SSS\": 0.1}", Type: "json", Description: "Rarity weight distribution for gacha"},
+	}
+
+	for _, s := range settings {
+		var existing models.SystemSetting
+		if err := db.Where("key = ?", s.Key).First(&existing).Error; err != nil {
+			log.Printf("Seeding system setting: %s = %s", s.Key, s.Value)
+			db.Create(&s)
+		}
+	}
+}
+
+// SeedQuestTemplates populates initial quest templates
+func SeedQuestTemplates(db *gorm.DB) error {
+	templates := []models.QuestTemplate{
+		{Type: "combat", Name: "Guardian of the Realm", Description: "Win %d battles using a Mono-Element team", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "rare", ActionType: "element_win", RewardGTK: 100},
+		{Type: "combat", Name: "Warlord's Path", Description: "Achieve a win streak of %d battles", BaseTarget: 5, ScaleFactor: 0.3, Difficulty: "epic", ActionType: "win_streak", RewardGTK: 200, RewardTOWER: 5},
+		{Type: "combat", Name: "Flawless Victory", Description: "Win %d battles with full HP remaining", BaseTarget: 2, ScaleFactor: 0.1, Difficulty: "rare", ActionType: "perfect_win", RewardGTK: 100},
+		{Type: "combat", Name: "Class Supremacy", Description: "Win %d battles using only one Class type", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "uncommon", ActionType: "class_win", RewardGTK: 50},
+		{Type: "combat", Name: "Battle Hardened", Description: "Participate in %d battles", BaseTarget: 10, ScaleFactor: 0.5, Difficulty: "common", ActionType: "battle_participation", RewardGTK: 25},
+		{Type: "collection", Name: "Genetic Mastery", Description: "Hatch %d Eggs", BaseTarget: 1, ScaleFactor: 0.1, Difficulty: "uncommon", ActionType: "egg_hatched", RewardGTK: 50},
+		{Type: "collection", Name: "Life Bringer", Description: "Start incubation for %d eggs", BaseTarget: 3, ScaleFactor: 0.2, Difficulty: "common", ActionType: "incubation_started", RewardGTK: 25},
+		{Type: "progression", Name: "Titan's Strength", Description: "Level up characters %d times", BaseTarget: 10, ScaleFactor: 1.0, Difficulty: "uncommon", ActionType: "level_up_count", RewardGTK: 50},
+		{Type: "progression", Name: "Resource Hoarder", Description: "Accumulate %d GTK from battles", BaseTarget: 2000, ScaleFactor: 200, Difficulty: "uncommon", ActionType: "gtk_earned", RewardGTK: 50},
+	}
+
+	for _, t := range templates {
+		var existing models.QuestTemplate
+		if err := db.Where("name = ?", t.Name).First(&existing).Error; err != nil {
+			if err := db.Create(&t).Error; err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

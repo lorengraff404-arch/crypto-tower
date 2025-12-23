@@ -58,15 +58,24 @@ func (s *AuthService) GetOrCreateUser(walletAddress string) (*models.User, error
 		return nil, err
 	}
 
+	// SUPER_ADMIN Fallback: If this is the first user, make them SUPER_ADMIN
+	var userCount int64
+	db.DB.Model(&models.User{}).Count(&userCount)
+	role := "PLAYER"
+	if userCount == 0 {
+		role = "SUPER_ADMIN"
+	}
+
 	user = models.User{
 		WalletAddress: walletAddress,
 		Nonce:         nonce,
+		Role:          role, // Set assigned role
 		Level:         1,
 		Rank:          "Cadete",
 		RankTier:      1,
-		ELO:           1000, // Starting ELO
+		ELO:           1000,
 		GTKBalance:    0,
-		TOWERBalance:  100, // Initial TOWER for onboarding
+		TOWERBalance:  100,
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {

@@ -18,6 +18,7 @@ type Team struct {
 
 	Name      string `gorm:"size:50;not null;default:'My Team'" json:"name"`
 	IsDefault bool   `gorm:"default:false" json:"is_default"`
+	IsActive  bool   `gorm:"default:false;index" json:"is_active"` // Active team for battles
 
 	// Members
 	Members []TeamMember `gorm:"foreignKey:TeamID" json:"members"`

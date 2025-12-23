@@ -1,0 +1,62 @@
+No files changed, compilation skipped
+Warning: Detected artifacts built from source files that no longer exist. Run `forge clean` to make sure builds are in sync with project files.
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/GameTokenSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/CharacterNFTSecure.sol
+ - /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/src/TowerTokenSecure.sol
+Script ran successfully.
+
+== Logs ==
+  Deploying contracts with: 0xdCb8ca66Ae0809Eed5dB73E8e1c3787c8178327e
+  Deployer balance: 299906504000000000
+  
+=== Deploying GameToken ===
+  GameToken deployed to: 0xF54C203451025D0f5D4d3693Bb2AE94027596FC9
+  GTK Total Supply: 1000000 tokens
+  
+=== Deploying TowerToken ===
+  TowerToken deployed to: 0xC7f8397C65795009945F75D9a3a7a966c64F8a79
+  TOWER Total Supply: 1000000 tokens
+  
+=== Deploying CharacterNFT ===
+  CharacterNFT deployed to: 0xC3aD6C7D990840Dc78bE9F53e3015407a1ED944D
+  
+=== Deploying ItemNFT ===
+  ItemNFT deployed to: 0xa8d309d134DfbF6BfFEb813970EdE79437814b89
+  
+=== Setting up permissions ===
+  GTK: Authorized deployer as minter (10K/day)
+  TOWER: Authorized deployer as minter (1K/day)
+  CharacterNFT: Authorized deployer as minter (10/day)
+  ItemNFT: Authorized deployer as minter
+  
+=== Deployment Complete ===
+  GameToken: 0xF54C203451025D0f5D4d3693Bb2AE94027596FC9
+  TowerToken: 0xC7f8397C65795009945F75D9a3a7a966c64F8a79
+  CharacterNFT: 0xC3aD6C7D990840Dc78bE9F53e3015407a1ED944D
+  ItemNFT: 0xa8d309d134DfbF6BfFEb813970EdE79437814b89
+  
+Deployment addresses saved to .deployments.env
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 97
+
+Estimated gas price: 0.1 gwei
+
+Estimated total gas used for script: 18502714
+
+Estimated amount required: 0.0018502714 BNB
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+
+Transactions saved to: /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/broadcast/Deploy.s.sol/97/run-latest.json
+
+Sensitive values saved to: /Users/lorengraff/Development/1.-EN-DESARROLLO/Crypto_Towell_Defense/smart-contracts/cache/Deploy.s.sol/97/run-latest.json
+

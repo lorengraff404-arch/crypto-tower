@@ -15,10 +15,10 @@ type RaidHandler struct {
 	battleEngine *services.BattleEngine
 }
 
-// NewRaidHandler creates a new raid handler
-func NewRaidHandler() *RaidHandler {
+// NewRaidHandler creates a new raid handler with dependencies injected
+func NewRaidHandler(raidService *services.RaidService) *RaidHandler {
 	return &RaidHandler{
-		raidService:  services.NewRaidService(),
+		raidService:  raidService,
 		battleEngine: services.NewBattleEngine(),
 	}
 }

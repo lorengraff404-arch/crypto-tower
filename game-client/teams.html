@@ -361,7 +361,7 @@
             const container = document.getElementById('availableList');
             container.innerHTML = '';
 
-            myCharacters.forEach(char => {
+            myCharacters.filter(char => !char.is_listed).forEach(char => {
                 const isInTeam = currentTeam.members.some(m => m.character_id === char.id);
 
                 const card = document.createElement('div');

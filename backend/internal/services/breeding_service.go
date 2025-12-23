@@ -21,7 +21,7 @@ type BreedingService struct {
 func NewBreedingService(bc *BlockchainService) *BreedingService {
 	return &BreedingService{
 		ledger:     NewLedgerService(),
-		config:     NewConfigService(),
+		config:     GetConfigService(),
 		blockchain: bc,
 	}
 }
@@ -325,6 +325,11 @@ func (s *BreedingService) HatchEgg(userID, eggID uint) (*models.Character, error
 	character := s.generateOffspring(egg.Parent1, egg.Parent2)
 	character.OwnerID = userID
 
+	// Generate Visual Traits (AI Prompt) for the new offspring
+	// We need an instance of CharacterService to use its helper
+	charService := NewCharacterService()
+	charService.GenerateVisualTraits(character)
+
 	if err := tx.Create(&character).Error; err != nil {
 		tx.Rollback()
 		return nil, errors.New("failed to create character")
@@ -426,7 +431,7 @@ func (s *BreedingService) inheritRarity(rarity1, rarity2 string) string {
 // GetUserEggs returns all eggs owned by a user
 func (s *BreedingService) GetUserEggs(userID uint) ([]models.Egg, error) {
 	var eggs []models.Egg
-	if err := db.DB.Preload("Parent1").Preload("Parent2").Where("user_id = ?", userID).Order("created_at DESC").Find(&eggs).Error; err != nil {
+	if err := db.DB.Preload("Parent1").Preload("Parent2").Where("user_id = ? AND hatched_at IS NULL", userID).Order("created_at DESC").Find(&eggs).Error; err != nil {
 		return nil, err
 	}
 	return eggs, nil

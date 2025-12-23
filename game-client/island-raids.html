@@ -1060,56 +1060,13 @@
     <script src="js/auth.js"></script>
     <script src="js/token-manager.js"></script>
 
+    <script type="module">
+        import apiClient from './dist/js/api.js';
+        window.apiClient = apiClient;
+    </script>
     <script>
-        // === API CLIENT (Inline Implementation) ===
-        const apiClient = {
-            baseURL: 'http://localhost:8080/api/v1',
-
-            async request(method, endpoint, data = null) {
-                const token = localStorage.getItem('token');
-                const headers = {
-                    'Content-Type': 'application/json'
-                };
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-
-                const options = {
-                    method,
-                    headers,
-                    credentials: 'include'
-                };
-
-                if (data && (method === 'POST' || method === 'PUT')) {
-                    options.body = JSON.stringify(data);
-                }
-
-                const response = await fetch(this.baseURL + endpoint, options);
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({ error: response.statusText }));
-                    throw new Error(error.error || error.message || 'Request failed');
-                }
-
-                return response.json();
-            },
-
-            get(endpoint) {
-                return this.request('GET', endpoint);
-            },
-
-            post(endpoint, data) {
-                return this.request('POST', endpoint, data);
-            },
-
-            put(endpoint, data) {
-                return this.request('PUT', endpoint, data);
-            },
-
-            delete(endpoint) {
-                return this.request('DELETE', endpoint);
-            }
-        };
+        // === API CLIENT (Imported from module) ===
+        // apiClient is now available on window via the module script above.
 
         // === CUSTOM NOTIFICATION SYSTEM (Phase 12) ===
         function showNotification(message, type = 'info', title = 'NOTIFICATION') {

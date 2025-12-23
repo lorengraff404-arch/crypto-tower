@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/lorengraff/crypto-tower-defense/internal/db"
@@ -26,7 +27,7 @@ func NewGachaService(bc *BlockchainService) *GachaService {
 	return &GachaService{
 		nameGenerator: NewNameGeneratorService(),
 		ledger:        NewLedgerService(),
-		config:        NewConfigService(),
+		config:        GetConfigService(),
 		blockchain:    bc,
 	}
 }
@@ -83,9 +84,9 @@ func (s *GachaService) MintEgg(userID uint, towerAmount int64, txHash string) (*
 
 	// SECURITY CHECK 4: Daily mint limit (Dynamic Config) - check before transaction
 	if s.config == nil {
-		s.config = NewConfigService()
+		s.config = GetConfigService()
 	}
-	dailyLimit := int64(s.config.GetInt("daily_mint_limit", 10))
+	dailyLimit := int64(s.config.GetInt("gacha_daily_mint_limit", 10))
 
 	today := time.Now().Format("2006-01-02")
 	var todayMints int64
@@ -641,17 +642,10 @@ func (s *GachaService) rollAbilities(class, rarity string) []uint {
 	return abilities
 }
 
-// getIncubationTime returns incubation time in hours based on rarity
+// getIncubationTime returns incubation time in hours based on rarity from config
 func (s *GachaService) getIncubationTime(rarity string) int {
-	times := map[string]int{
-		"C":   6,  // 6 hours
-		"B":   12, // 12 hours
-		"A":   24, // 1 day
-		"S":   48, // 2 days
-		"SS":  72, // 3 days
-		"SSS": 96, // 4 days
-	}
-	return times[rarity]
+	key := fmt.Sprintf("gacha_incubation_%s", strings.ToLower(rarity))
+	return s.config.GetInt(key, 24) // Default to 24 if not found
 }
 
 // GetOddsPreview returns probability preview for a given TOWER amount

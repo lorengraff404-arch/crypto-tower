@@ -177,9 +177,9 @@
     </div>
 
     <script src="js/wallet.js"></script>
+    <script src="js/wallet.js"></script>
     <script type="module">
-        import { gameAPI } from './dist/js/game-api.js';
-        window.gameAPI = gameAPI;
+        import apiClient from './dist/js/api.js';
 
         let selection = {
             type: '',
@@ -254,32 +254,21 @@
                 btn.disabled = true;
                 btn.textContent = 'Creating...';
 
-                const response = await fetch('http://localhost:8080/api/v1/characters', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        character_type: selection.type,
-                        element: selection.element,
-                        rarity: selection.rarity,
-                        class: selection.class
-                    })
+                const response = await apiClient.post('/characters', {
+                    character_type: selection.type,
+                    element: selection.element,
+                    rarity: selection.rarity,
+                    class: selection.class
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to create character');
-                }
-
-                const data = await response.json();
                 alert('✨ Character created successfully!');
                 window.location.href = 'game.html';
 
             } catch (error) {
                 alert('Error creating character: ' + error.message);
-                document.getElementById('createBtn').disabled = false;
-                document.getElementById('createBtn').textContent = '✨ Create Character';
+                const btn = document.getElementById('createBtn');
+                btn.disabled = false;
+                btn.textContent = '✨ Create Character';
             }
         });
     </script>

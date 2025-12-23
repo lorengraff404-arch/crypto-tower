@@ -433,21 +433,117 @@
         </div>
     </div>
 
-    <!-- Character Selection Modal -->
-    <div class="modal-overlay" id="selectionModal">
-        <div class="selector-modal">
-            <div class="modal-header">
-                <span class="modal-title">Select Character</span>
-                <button class="close-modal" onclick="closeSelectionModal()">&times;</button>
+    <!-- Hatching Modal -->
+    <div class="modal-overlay" id="hatchModal">
+        <div class="selector-modal"
+            style="text-align: center; max-width: 500px; background: radial-gradient(circle, #2a2d3e 0%, #1a1c2c 100%);">
+            <div class="modal-header" style="justify-content: center; border: none;">
+                <span class="modal-title"
+                    style="color: #f093fb; text-shadow: 0 0 10px rgba(240, 147, 251, 0.5);">INCUBATION COMPLETE</span>
             </div>
-            <div class="character-grid" id="characterGrid">
-                <!-- Characters injected here -->
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                    Loading DNA database...
+
+            <div id="hatchContent"
+                style="padding: 40px; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <!-- Stage 1: Shaking Egg -->
+                <div id="eggStage" style="font-size: 8em; cursor: pointer; animation: float 3s infinite ease-in-out;">
+                    🥚
+                </div>
+                <div id="hatchMessage" style="margin-top: 20px; color: #aaa; font-style: italic;">
+                    Something is emerging...
+                </div>
+
+                <!-- Stage 2: Character Reveal (Hidden initially) -->
+                <div id="revealStage" style="display: none; width: 100%;">
+                    <div id="newCharImage" class="char-image"
+                        style="width: 150px; height: 150px; border-width: 5px; margin-bottom: 20px; box-shadow: 0 0 30px rgba(255,255,255,0.2);">
+                    </div>
+                    <h2 id="newCharName" style="font-size: 2em; margin-bottom: 10px;">Unknown Lifeform</h2>
+                    <div id="newCharRarity" style="font-size: 1.2em; font-weight: bold; margin-bottom: 20px;"></div>
+
+                    <div
+                        style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #aaa;">Class:</span>
+                            <span id="newCharClass" style="color: white; font-weight: bold;">???</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #aaa;">Element:</span>
+                            <span id="newCharElement" style="color: white; font-weight: bold;">???</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #aaa;">Potential:</span>
+                            <span style="color: #f093fb;">Unknown</span>
+                        </div>
+                    </div>
+
+                    <button class="breed-button" onclick="closeHatchModal()">COLLECT SPECIMEN</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        @keyframes shake {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(5deg);
+            }
+
+            50% {
+                transform: rotate(0deg);
+            }
+
+            75% {
+                transform: rotate(-5deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .shaking {
+            animation: shake 0.5s infinite !important;
+        }
+
+        .burst-effect {
+            animation: burst 0.5s ease-out;
+        }
+
+        @keyframes burst {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
 
     <script type="module">
         import { apiClient } from './dist/js/api.js';
@@ -463,7 +559,8 @@
                 const loadingEl = document.getElementById('loading');
                 if (loadingEl) loadingEl.style.display = 'block';
 
-                const response = await apiClient.get('/eggs');
+                // Fixed route: /breeding/eggs
+                const response = await apiClient.get('/breeding/eggs');
                 const eggs = response.eggs || [];
 
                 if (loadingEl) loadingEl.style.display = 'none';
@@ -512,8 +609,6 @@
             const modal = document.getElementById('selectionModal');
             modal.classList.add('active');
 
-            // Fetch characters if not loaded OR refresh always to ensure listing status
-            // For now, load if empty
             if (userCharacters.length === 0) {
                 try {
                     const response = await apiClient.get('/characters');
@@ -524,7 +619,6 @@
                     return;
                 }
             }
-
             renderCharacterSelection();
         };
 
@@ -537,8 +631,6 @@
             const grid = document.getElementById('characterGrid');
             grid.innerHTML = '';
 
-            // Filter valid characters (not sold, etc.)
-            // Exclude character already selected in OTHER slot
             const otherSlot = activeSlot === 1 ? 2 : 1;
             const otherCharId = selectedParents[`parent${otherSlot}`] ? selectedParents[`parent${otherSlot}`].id : null;
 
@@ -550,16 +642,11 @@
             userCharacters.forEach(char => {
                 const isSelectedHere = selectedParents[`parent${activeSlot}`]?.id === char.id;
                 const isSelectedOther = otherCharId === char.id;
-
-                // Assuming 'is_listed' handles marketplace status. If not present, we assume available.
                 const isListed = char.is_listed || false;
-
                 const isDisabled = isSelectedOther || isListed;
 
                 const div = document.createElement('div');
                 div.className = `char-card ${isDisabled ? 'disabled' : ''}`;
-
-                // Color based on rarity
                 const rarityColorClass = `rarity-${char.rarity}`;
 
                 div.innerHTML = `
@@ -577,7 +664,6 @@
                 if (!isDisabled) {
                     div.onclick = () => selectCharacter(char);
                 }
-
                 grid.appendChild(div);
             });
         }
@@ -596,7 +682,7 @@
 
             slotEl.classList.add('selected');
             defaultContent.style.display = 'none';
-            selectedContent.style.display = 'flex'; // Enable flex
+            selectedContent.style.display = 'flex';
 
             selectedContent.innerHTML = `
                 <div class="char-image rarity-${char.rarity}" style="width: 80px; height: 80px; background-image: url('assets/characters/${char.class.toLowerCase()}.png'), url('https://via.placeholder.com/80/333/fff?text=${char.class[0]}');"></div>
@@ -630,8 +716,6 @@
 
         window.startBreeding = async function () {
             if (!selectedParents.parent1 || !selectedParents.parent2) return;
-
-            // Optional confirmation
             if (!confirm(`Breed ${selectedParents.parent1.name} and ${selectedParents.parent2.name} for 500 TOWER?`)) return;
 
             const btn = document.getElementById('breedBtn');
@@ -646,7 +730,6 @@
 
                 if (response.success) {
                     alert('✨ Breeding Successful! Genetic sequence combined.');
-                    // Reset
                     window.removeParent(1);
                     window.removeParent(2);
                     loadEggs();
@@ -659,25 +742,85 @@
             }
         };
 
+        // --- NEW Hatching Logic ---
+
         window.hatchEgg = async function (eggId) {
             if (!confirm('Hatch this egg now?')) return;
+
             try {
-                const response = await apiClient.post(`/eggs/${eggId}/hatch`);
-                if (response.success) {
-                    alert('🐣 Egg Hatched! New lifeform created.');
-                    loadEggs();
+                // Fixed route: /breeding/hatch/:id
+                const response = await apiClient.post(`/breeding/hatch/${eggId}`);
+
+                if (response.success && response.character) {
+                    showHatchModal(response.character);
+                    loadEggs(); // Refresh background
                 }
             } catch (error) {
                 alert('Hatching Protocol Failed: ' + error.message);
             }
         };
 
+        window.showHatchModal = function (char) {
+            const modal = document.getElementById('hatchModal');
+            const eggStage = document.getElementById('eggStage');
+            const revealStage = document.getElementById('revealStage');
+            const message = document.getElementById('hatchMessage');
+
+            // Reset state
+            modal.classList.add('active');
+            eggStage.style.display = 'block';
+            revealStage.style.display = 'none';
+            message.textContent = "Incubating...";
+            message.style.display = 'block';
+            eggStage.classList.remove('shaking');
+
+            // Sequence
+            setTimeout(() => {
+                // Phase 1: Shake
+                eggStage.classList.add('shaking');
+                message.textContent = "Energy Levels Rising...";
+            }, 500);
+
+            setTimeout(() => {
+                // Phase 2: CRACK!
+                message.textContent = "CRITICAL MASS REACHED!";
+            }, 2000);
+
+            setTimeout(() => {
+                // Phase 3: Reveal
+                eggStage.style.display = 'none';
+                message.style.display = 'none';
+                revealStage.style.display = 'block';
+                revealStage.classList.add('burst-effect');
+
+                // Populate Data
+                document.getElementById('newCharName').textContent = char.name;
+                document.getElementById('newCharName').style.color = getRarityColor(char.rarity);
+
+                const rarityEl = document.getElementById('newCharRarity');
+                rarityEl.textContent = `${char.rarity} CLASS`;
+                rarityEl.style.color = getRarityColor(char.rarity);
+
+                document.getElementById('newCharClass').textContent = char.class;
+                document.getElementById('newCharElement').textContent = char.element;
+
+                // Image
+                const img = document.getElementById('newCharImage');
+                img.style.backgroundImage = `url('assets/characters/${char.class.toLowerCase()}.png')`;
+                img.className = `char-image rarity-${char.rarity}`;
+            }, 3000);
+        };
+
+        window.closeHatchModal = function () {
+            document.getElementById('hatchModal').classList.remove('active');
+        };
+
         // Close modal on click outside
         window.onclick = function (event) {
-            const modal = document.getElementById('selectionModal');
-            if (event.target === modal) {
+            if (event.target.id === 'selectionModal') {
                 closeSelectionModal();
             }
+            // Don't close hatch modal by clicking background to prevent accidental close during reveal
         };
 
         // Initialize

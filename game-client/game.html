@@ -8,10 +8,154 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/abilities.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* PREMIUM SHOP & MODAL STYLES */
+        :root {
+            --shop-primary: #3b82f6;
+            --shop-secondary: #1e293b;
+            --shop-accent: #f59e0b;
+            --rarity-rare: #3b82f6;
+            --rarity-epic: #a855f7;
+            --rarity-legendary: #f59e0b;
+        }
+
+        .premium-modal {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            color: #f8fafc;
+        }
+
+        .shop-header-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .shop-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .premium-item-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .premium-item-card:hover {
+            transform: translateY(-8px);
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .item-icon-wrapper {
+            font-size: 48px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
+        }
+
+        .item-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .item-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .item-price-tag {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 99px;
+            padding: 6px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #fbbf24;
+            font-size: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .premium-buy-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            padding: 0 20px 20px 20px;
+        }
+
+        .tab-item {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .tab-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .balance-badge {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         body {
@@ -21,6 +165,8 @@
             min-height: 100vh;
             padding-bottom: 100px;
         }
+
+
 
         /* Header */
         .header {
@@ -648,6 +794,10 @@
                 style="background: linear-gradient(135deg, #10b981, #059669);">
                 🎯 Daily Quests
             </button>
+            <button class="action-btn action-btn-success" onclick="window.location.href='leaderboard.html'"
+                style="background: linear-gradient(135deg, #fcd34d, #f59e0b);">
+                🏆 Leaderboard
+            </button>
             <button class="action-btn action-btn-success" id="mintCharacterBtn" style="grid-column: span 2;">
                 ✨ Mint Character
             </button>
@@ -660,6 +810,13 @@
                 style="background: linear-gradient(135deg, #f97316, #ea580c);">
                 🛒 Shop
             </button>
+            <button class="action-btn" id="battleBtn"
+                style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; font-weight: bold; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+                ⚔️ BATTLE
+            </button>
+            <!-- Wager Mode Moved to Fab/Floating Button -->
+            <!-- Listeners will be consolidated in the main script block -->
+
             <button class="action-btn action-btn-success" id="inventoryBtn"
                 style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                 🎒 Inventory
@@ -693,11 +850,7 @@
         <div id="characters" class="characters-grid"></div>
     </div>
 
-    <!-- Floating Action Button -->
-    <button id="fabBtn" class="fab" style="display: none;" disabled>
-        ⚔️
-        <span id="fabBadge" class="fab-badge">0</span>
-    </button>
+
 
     <!-- Battle Modal -->
     <div id="battleModal" class="modal-overlay">
@@ -712,7 +865,7 @@
                 </div>
 
                 <div class="bet-input-group">
-                    <label class="bet-label">Bet Amount (TOWER)</label>
+                    <label class="bet-label" for="betAmount">Bet Amount (TOWER)</label>
                     <input type="number" id="betAmount" class="bet-input" min="0" value="10"
                         placeholder="Enter bet amount">
                 </div>
@@ -739,7 +892,7 @@
                 <p id="sellCharacterName" style="margin-bottom: 20px; font-size: 18px; font-weight: 600;"></p>
 
                 <div class="bet-input-group">
-                    <label class="bet-label">Price (TOWER Tokens)</label>
+                    <label class="bet-label" for="sellPrice">Price (TOWER Tokens)</label>
                     <input type="number" id="sellPrice" class="bet-input" min="1" value="1000"
                         placeholder="Enter price">
                 </div>
@@ -793,93 +946,116 @@
         </div>
     </div>
 
-    <!-- Shop Modal -->
+    <!-- Shop Modal REDESIGN -->
     <div id="shopModal" class="modal-overlay" style="display: none;">
-        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h2>🛒 Item Shop</h2>
+        <div class="modal premium-modal" style="max-width: 1000px; padding: 0; width: 95%;">
+            <div class="shop-header-gradient">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2 style="font-size: 32px; font-weight: 900; margin: 0; letter-spacing: -0.5px;">🛒 Item Shop
+                        </h2>
+                        <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px;">Equip your characters for maximum
+                            power</p>
+                    </div>
+                    <div class="balance-badge">
+                        <div style="font-size: 24px;">💰</div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 11px; color: #f59e0b; font-weight: 800; text-transform: uppercase;">
+                                GTK Balance</div>
+                            <div style="font-size: 20px; font-weight: 900; color: #fff;" id="shopGTKBalance">0</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" id="shopTabs">
-                    <button class="tab-btn active" data-category="all">All</button>
-                    <button class="tab-btn" data-category="consumable">Consumables</button>
-                    <button class="tab-btn" data-category="weapon">Weapons</button>
-                    <button class="tab-btn" data-category="armor">Armor</button>
-                    <button class="tab-btn" data-category="currency">Special</button>
-                </div>
 
-                <div
-                    style="text-align: right; font-size: 18px; font-weight: bold; color: #FFD700; margin-bottom: 20px;">
-                    GTK Balance: <span id="shopGTKBalance">0</span>
-                </div>
+            <div class="tab-nav" id="shopTabs" style="margin-top: 20px;">
+                <div class="tab-item active" data-category="all">All Items</div>
+                <div class="tab-item" data-category="consumable">Consumables</div>
+                <div class="tab-item" data-category="weapon">Weapons</div>
+                <div class="tab-item" data-category="armor">Armor</div>
+                <div class="tab-item" data-category="egg">Eggs & Tools</div>
+                <div class="tab-item" data-category="currency">Special</div>
+            </div>
 
-                <div id="shopItems"
-                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                </div>
+            <div id="shopItems" class="shop-grid-container">
+                <!-- Items populated by JS -->
+            </div>
 
-                <div class="modal-actions" style="margin-top: 30px;">
-                    <button class="action-btn" style="background: #64748b;" id="closeShopBtn">Close</button>
-                </div>
+            <div
+                style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: right; background: rgba(0,0,0,0.2);">
+                <button class="action-btn" style="background: #334155; padding: 12px 30px; border-radius: 12px;"
+                    id="closeShopBtn">Close Shop</button>
             </div>
         </div>
     </div>
 
-    <!-- Inventory Modal -->
+
+    <!-- Inventory Modal REDESIGN -->
     <div id="inventoryModal" class="modal-overlay" style="display: none;">
-        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h2>🎒 My Inventory</h2>
-                <p style="color: #94a3b8; margin-top: 10px;">Your purchased items</p>
+        <div class="modal premium-modal" style="max-width: 900px; padding: 0; width: 90%;">
+            <div class="shop-header-gradient">
+                <h2 style="font-size: 28px; font-weight: 900; margin: 0;">🎒 My Inventory</h2>
+                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">View and use your items</p>
             </div>
-            <div class="modal-body">
-                <div id="userInventory"
-                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                </div>
-                <div class="modal-actions" style="margin-top: 30px;">
-                    <button class="action-btn" style="background: #64748b;" id="closeInventoryBtn">Close</button>
-                </div>
+
+            <div id="userInventory" class="shop-grid-container" style="max-height: 70vh;">
+                <!-- Items populated by JS -->
+            </div>
+
+            <div
+                style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: right; background: rgba(0,0,0,0.2);">
+                <button class="action-btn" style="background: #334155; padding: 10px 25px; border-radius: 12px;"
+                    id="closeInventoryBtn">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- My Eggs Modal -->
+
+    <!-- My Eggs Modal REDESIGN -->
     <div id="myEggsModal" class="modal-overlay" style="display: none;">
-        <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal premium-modal" style="max-width: 900px; padding: 0; width: 90%;">
+            <div class="shop-header-gradient">
+                <h2 style="font-size: 28px; font-weight: 900; margin: 0;">🥚 My Eggs</h2>
+                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Hatch eggs or use accelerators</p>
+            </div>
+
+            <div id="eggsList" class="shop-grid-container" style="max-height: 70vh;">
+                <!-- Eggs populated by JS -->
+            </div>
+
+            <div
+                style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: right; background: rgba(0,0,0,0.2);">
+                <button class="action-btn" style="background: #334155; padding: 10px 25px; border-radius: 12px;"
+                    id="closeEggsBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marketplace Modal -->
+    <div id="marketplaceModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2>🥚 My Eggs</h2>
+                <h2>🏪 Marketplace</h2>
+                <p style="color: #94a3b8; margin-top: 10px;">Buy and sell characters with TOWER</p>
             </div>
             <div class="modal-body">
-                <div id="eggsList"
-                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                <div id="marketplaceGrid"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                 </div>
-                <div class="modal-actions" style="margin-top: 20px;">
-                    <button class="action-btn" style="background: #64748b;" id="closeEggsBtn">Close</button>
+                <div id="marketplaceLoading" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    Loading...
                 </div>
-            </div>
-        </div>
-        <!-- Marketplace Modal -->
-        <div id="marketplaceModal" class="modal-overlay" style="display: none;">
-            <div class="modal" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h2>🏪 Marketplace</h2>
-                    <p style="color: #94a3b8; margin-top: 10px;">Buy and sell characters with TOWER</p>
-                </div>
-                <div class="modal-body">
-                    <div id="marketplaceGrid"
-                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                    </div>
-                    <div id="marketplaceLoading" style="text-align: center; padding: 40px; color: #94a3b8;">Loading...
-                    </div>
-                    <div id="marketplaceEmpty"
-                        style="display: none; text-align: center; padding: 40px; color: #94a3b8;">No listings</div>
-                    <div class="modal-actions" style="margin-top: 30px;">
-                        <button class="action-btn" style="background: #64748b;" id="closeMarketplaceBtn">Close</button>
-                    </div>
+                <div id="marketplaceEmpty" style="display: none; text-align: center; padding: 40px; color: #94a3b8;">No
+                    listings</div>
+                <div class="modal-actions" style="margin-top: 30px;">
+                    <button class="action-btn" style="background: #64748b;" id="closeMarketplaceBtn">Close</button>
                 </div>
             </div>
         </div>
-
     </div>
+
+
+
 
     <style>
         .tab-btn {
@@ -1025,15 +1201,12 @@
             }
         }
 
-        // Load balances when page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            // AUTH CHECK - Require authentication
-            if (!await requireAuth()) {
-                return; // requireAuth() handles redirect
-            }
+        // Expose to window for other scripts to use
+        window.loadRealBalances = loadRealBalances;
+        window.apiClient = apiClient;
+    </script>
 
-            loadRealBalances();
-        });
+    <script>
 
         let characters = [];
         let selectedCharacterIds = [];
@@ -1197,34 +1370,16 @@
                 }
             });
 
-            // Update FAB
-            const fab = document.getElementById('fabBtn');
-            const fabBadge = document.getElementById('fabBadge');
-            fabBadge.textContent = selectedCharacterIds.length;
-
-            if (selectedCharacterIds.length > 0) {
-                fab.style.display = 'flex';
-                fab.disabled = false;
-            } else {
-                fab.style.display = 'none';
-                fab.disabled = true;
-            }
+            // FAB removed
         }
 
-        // FAB click
+        // FAB and Character Selection Logic - Temporarily Disabled/Removed as FAB is gone
+        // Re-implement if Character Selection is needed outside of Team Page
+        /*
         document.getElementById('fabBtn').addEventListener('click', () => {
-            const selectedChars = characters.filter(c => selectedCharacterIds.includes(c.id));
-            const teamDisplay = document.getElementById('selectedTeamDisplay');
-
-            teamDisplay.innerHTML = selectedChars.map(char => `
-                <div class="selected-team-char">
-                    <span style="font-size: 24px;">${getCharacterEmoji(char.character_type)}</span>
-                    <span style="font-weight: 600;">${char.name || char.character_type}</span>
-                </div>
-            `).join('');
-
-            document.getElementById('battleModal').classList.add('active');
+             // Logic removed to prevent error
         });
+        */
 
         // Modal cancel
         document.getElementById('cancelBattleBtn').addEventListener('click', () => {
@@ -1359,8 +1514,30 @@
             return emojis[element] || '✨';
         }
 
-        // Initialize
-        loadCharacters();
+
+        // Initialize everything when window and modules are fully loaded
+        window.addEventListener('load', async () => {
+            console.log('🏁 Game Initialization Starting...');
+
+            // AUTH CHECK - Require authentication
+            if (typeof requireAuth === 'function') {
+                try {
+                    if (!await requireAuth()) return;
+                } catch (e) {
+                    console.error('Auth check failed:', e);
+                }
+            }
+
+            // Now that we are sure modules (like apiClient) are ready
+            console.log('🚀 Loading game data...');
+            if (typeof loadRealBalances === 'function') {
+                loadRealBalances();
+            }
+
+            if (typeof loadCharacters === 'function') {
+                loadCharacters();
+            }
+        });
 
         // ========== GACHA SYSTEM ==========
 
@@ -1368,8 +1545,13 @@
         const modals = {
             mint: document.getElementById('mintModal'),
             shop: document.getElementById('shopModal'),
-            eggs: document.getElementById('myEggsModal')
+            eggs: document.getElementById('myEggsModal'),
+            inventory: document.getElementById('inventoryModal'),
+            marketplace: document.getElementById('marketplaceModal'),
+            battle: document.getElementById('battleModal'),
+            sell: document.getElementById('sellModal')
         };
+
 
         function closeAllModals() {
             Object.values(modals).forEach(modal => {
@@ -1877,14 +2059,49 @@
 
         document.getElementById('closeShopBtn')?.addEventListener('click', closeAllModals);
 
+
         // Inventory button
         document.getElementById('inventoryBtn')?.addEventListener('click', async () => {
-            modals.inventory = document.getElementById('inventoryModal');
-            modals.inventory.style.display = 'flex';
-            await loadUserInventory();
+            const inventoryModal = document.getElementById('inventoryModal');
+            if (inventoryModal) {
+                inventoryModal.style.display = 'flex';
+                await loadUserInventory();
+            }
         });
 
+        // My Eggs button
+        document.getElementById('myEggsBtn')?.addEventListener('click', async () => {
+            const eggsModal = document.getElementById('myEggsModal');
+            if (eggsModal) {
+                eggsModal.style.display = 'flex';
+                // The function showEggSelectorModal is defined elsewhere or we can trigger loadMyEggs
+                if (typeof loadMyEggs === 'function') {
+                    await loadMyEggs();
+                } else {
+                    // Fallback if loadMyEggs isn't defined yet
+                    modals.eggs.style.display = 'flex';
+                }
+            }
+        });
+
+        // Battle Mode button
+        document.getElementById('battleBtn')?.addEventListener('click', async () => {
+            try {
+                // Use dynamic import correctly
+                const { showBattleSelectionModal } = await import('./dist/js/wager-ui.js');
+                if (typeof showBattleSelectionModal === 'function') {
+                    showBattleSelectionModal();
+                }
+            } catch (e) {
+                console.error('Failed to load wager-ui:', e);
+                alert('Wager UI currently unavailable');
+            }
+        });
+
+
         document.getElementById('closeInventoryBtn')?.addEventListener('click', closeAllModals);
+        document.getElementById('closeEggsBtn')?.addEventListener('click', closeAllModals);
+
 
         // Shop tabs
         document.getElementById('shopTabs')?.addEventListener('click', (e) => {
@@ -1897,30 +2114,76 @@
 
         async function loadShopItems(category) {
             try {
+                const shopGrid = document.getElementById('shopItems');
+                shopGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px;"><div class="loading-spinner"></div><p style="margin-top: 15px; color: #64748b;">Opening Shop Vault...</p></div>';
+
                 const endpoint = category === 'all' ? '/shop/items' : `/shop/items/${category}`;
                 const response = await apiClient.get(endpoint);
                 const items = response.items || [];
 
-                const shopGrid = document.getElementById('shopItems');
-
                 if (items.length === 0) {
-                    shopGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No items available in this category.</p>';
+                    shopGrid.innerHTML = `
+                            <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                                <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;">📦</div>
+                                <h3 style="color: #fff; margin-bottom: 8px;">No Stock Available</h3>
+                                <p style="color: #64748b;">Check back later for new arrivals in this category.</p>
+                            </div>
+                        `;
                     return;
                 }
 
-                shopGrid.innerHTML = items.map(item => `
-                    <div class="shop-item">
-                        <div class="item-icon">🎁</div>
-                        <div style="font-weight: bold; margin-bottom: 5px;">${item.name}</div>
-                        <div style="font-size: 12px; color: #aaa; margin-bottom: 10px; min-height: 40px;">${item.description}</div>
-                        <div style="color: #FFD700; font-weight: bold; margin-bottom: 10px;">${item.gtk_cost} GTK</div>
-                        <button class="buy-btn" data-item-id="${item.id}" data-item-name="${item.name}" data-item-cost="${item.gtk_cost}">Buy</button>
-                    </div>
-                `).join('');
+                // Item Icons Map
+                const iconMap = {
+                    'Small Potion': '🧪', 'Medium Potion': '⚗️', 'Large Potion': '💊', 'Mega Potion': '💉',
+                    'Bronze Dagger': '🗡️', 'Wooden Sword': '🪵', 'Iron Sword': '⚔️', 'Steel Broadsword': '🛡️',
+                    'Mithril Blade': '✨', 'Leather Armor': '🛡️', 'Wooden Shield': '🪵', 'Time Skip Device': '⏳',
+                    'XP Scroll': '📜', 'Dragon Bone Blade': '🐲', 'Crystal Staff': '🔮', 'Runite Guard': '💎',
+                    'Basic Nest': '🪹', 'Advanced Incubator': '🧬', 'Solar Heat Lamp': '☀️', 'Egg Scanner': '🔍'
+                };
+
+                shopGrid.innerHTML = items.map(item => {
+                    const icon = iconMap[item.name] || '🎁';
+                    const isEpic = item.gtk_cost > 3000;
+                    const isLegendary = item.gtk_cost > 10000;
+                    const rarityClass = isLegendary ? 'legendary' : (isEpic ? 'epic' : 'rare');
+
+                    return `
+                        <div class="premium-item-card">
+                            <div class="item-rarity-glow" style="background: radial-gradient(circle, var(--rarity-${rarityClass}-glow, rgba(59, 130, 246, 0.1)) 0%, transparent 70%);"></div>
+                            <div class="item-icon-wrapper">${icon}</div>
+                            <div>
+                                <div class="item-title">${item.name}</div>
+                                <div class="item-desc">${item.description}</div>
+                            </div>
+                            <div>
+                                <div class="item-price-tag">
+                                    <span style="font-size: 12px; opacity: 0.7;">PRICE:</span>
+                                    <span>${item.gtk_cost} GTK</span>
+                                </div>
+                                <button class="premium-buy-btn buy-btn" 
+                                    data-item-id="${item.id}" 
+                                    data-item-name="${item.name}" 
+                                    data-item-cost="${item.gtk_cost}">
+                                    Purchase
+                                </button>
+                            </div>
+                        </div>
+                    `}).join('');
             } catch (error) {
                 console.error('Error loading shop items:', error);
+                document.getElementById('shopItems').innerHTML = '<p style="color: #ef4444; width: 100%; text-align:center;">Failed to connect to shop service.</p>';
             }
         }
+
+        // Shop tab functionality fix for new structure
+        document.getElementById('shopTabs')?.addEventListener('click', (e) => {
+            const tab = e.target.closest('.tab-item');
+            if (tab) {
+                document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+                tab.classList.add('active');
+                loadShopItems(tab.dataset.category);
+            }
+        });
 
         // Buy item logic with Premium Dark Modal
         document.getElementById('shopItems')?.addEventListener('click', (e) => {
@@ -2199,8 +2462,8 @@
                 for (const [category, items] of Object.entries(grouped)) {
                     const catInfo = categoryInfo[category] || categoryInfo.other;
                     html += `
-                        <div style="grid-column: 1/-1; margin-top: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.1);">
-                            <h4 style="margin: 0; color: #FFD700; font-size: 16px;">
+                        <div style="grid-column: 1/-1; margin-top: 20px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="margin: 0; color: #3b82f6; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
                                 ${catInfo.icon} ${catInfo.name}
                             </h4>
                         </div>
@@ -2212,32 +2475,30 @@
                         const isEggItem = category === 'egg';
 
                         html += `
-                            <div class="inventory-item" style="
-                                background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
-                                border: 1px solid rgba(255,215,0,0.2);
-                                border-radius: 12px;
-                                padding: 15px;
-                                text-align: center;
-                                transition: all 0.3s ease;
-                                cursor: pointer;
-                            " onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='rgba(255,215,0,0.5)'"
-                               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,215,0,0.2)'">
-                                <div style="font-size: 40px; margin-bottom: 10px;">${icon}</div>
-                                <div style="font-weight: bold; margin-bottom: 5px; color: #FFD700;">${item.name}</div>
-                                <div style="margin-bottom: 5px; color: #94a3b8; font-size: 12px;">${item.description || ''}</div>
-                                <div style="margin-bottom: 10px; color: #64748b; font-size: 14px;">Quantity: <span style="color: #FFD700; font-weight: bold;">${inv.quantity}</span></div>
-                                <button class="use-btn action-btn" 
-                                    data-item-id="${item.id}" 
-                                    data-item-name="${item.name}"
-                                    data-item-category="${category}"
-                                    data-item-effect="${item.effect_type}"
-                                    style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); padding: 8px 16px;">
-                                    ${isEggItem ? '🥚 Use on Egg' : '🎯 Use on Character'}
-                                </button>
+                            <div class="premium-item-card" style="min-height: 250px;">
+                                <div class="item-icon-wrapper">${icon}</div>
+                                <div style="flex: 1;">
+                                    <div class="item-title">${item.name}</div>
+                                    <div class="item-desc">${item.description || ''}</div>
+                                </div>
+                                <div style="margin-top: auto;">
+                                    <div class="item-price-tag" style="color: #94a3b8; border-color: rgba(255,255,255,0.1); width: 100%; text-align: center;">
+                                        QTY: <span style="color: #fff;">${inv.quantity}</span>
+                                    </div>
+                                    <button class="use-btn premium-buy-btn" 
+                                        data-item-id="${item.id}" 
+                                        data-item-name="${item.name}"
+                                        data-item-category="${category}"
+                                        data-item-effect="${item.effect_type}"
+                                        style="background: linear-gradient(135deg, #10b981, #059669); width: 100%; border-radius: 12px; font-weight: 700;">
+                                        ${isEggItem ? 'Use on Egg' : 'Use on Character'}
+                                    </button>
+                                </div>
                             </div>
                         `;
                     });
                 }
+
 
                 inventoryGrid.innerHTML = html;
             } catch (error) {
@@ -2645,92 +2906,44 @@
                 eggsGrid.innerHTML = eggs.map(egg => {
                     const isHatched = egg.hatched_at !== null;
                     const isIncubating = egg.incubation_started_at !== null && !isHatched;
-                    const canHatch = isIncubating && isEggReady(egg);
+                    const canHatch = isIncubating && ((new Date() - new Date(egg.incubation_started_at)) / (1000 * 60 * 60) >= egg.effective_incubation_time);
 
-                    let statusHTML = '';
-                    let actionHTML = '';
+                    let statusText = '';
+                    let actionButton = '';
+                    let statusColor = '#94a3b8';
 
                     if (isHatched) {
-                        statusHTML = '<div style="color: #4CAF50; font-weight: bold;">✅ Hatched</div>';
+                        statusText = 'Hatched';
+                        statusColor = '#10b981';
                     } else if (canHatch) {
-                        statusHTML = '<div style="color: #4CAF50; font-weight: bold; animation: pulse 1s infinite;">🎉 Ready to Hatch!</div>';
-                        actionHTML = `<button class="hatch-btn" data-egg-id="${egg.id}">Hatch Now!</button>`;
+                        statusText = 'Ready to Hatch!';
+                        statusColor = '#10b981';
+                        actionButton = `<button class="premium-buy-btn hatch-btn" data-egg-id="${egg.id}" style="background: linear-gradient(135deg, #10b981, #059669);">Hatch Now!</button>`;
                     } else if (isIncubating) {
                         const remaining = getRemainingTime(egg);
-                        statusHTML = `<div style="color: #FF9800; font-weight: bold;">⏱️ ${remaining}</div>`;
+                        statusText = `Remaining: ${remaining}`;
+                        statusColor = '#f59e0b';
+                        actionButton = `<button class="premium-buy-btn" style="background: rgba(255,255,255,0.1); color: #94a3b8;" disabled>Incubating...</button>`;
                     } else {
-                        statusHTML = '<div style="color: #64748b;">🥚 Not Incubating</div>';
-                        actionHTML = `<button class="incubate-btn" data-egg-id="${egg.id}">Start Incubation</button>`;
+                        statusText = 'Not Incubating';
+                        actionButton = `<button class="premium-buy-btn incubate-btn" data-egg-id="${egg.id}">Start Incubation</button>`;
                     }
 
-                    const eggCard = `
-                        <div class="egg-card" style="
-                            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-                            border: 2px solid rgba(148, 163, 184, 0.2);
-                            border-radius: 16px;
-                            padding: 20px;
-                            margin-bottom: 15px;
-                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-                            transition: transform 0.2s, box-shadow 0.2s;
-                        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0, 0, 0, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.3)';">
-                            <!-- Egg Icon and Status -->
-                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                                <div style="font-size: 48px; filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.3));">🥚</div>
-                                <div style="flex: 1;">
-                                    <div style="color: #e2e8f0; font-weight: 700; font-size: 18px; margin-bottom: 5px;">
-                                        Mystery Egg #${egg.id}
-                                    </div>
-                                    <div style="color: #64748b; font-size: 13px;">
-                                        🔒 Traits Concealed
-                                    </div>
-                                </div>
+                    return `
+                        <div class="premium-item-card">
+                            <div class="item-icon-wrapper">🥚</div>
+                            <div style="flex: 1;">
+                                <div class="item-title">${egg.rarity || 'Mystery'} Egg</div>
+                                <div style="color: ${statusColor}; font-weight: 800; font-size: 11px; text-transform: uppercase; margin-bottom: 5px;">${statusText}</div>
+                                <div style="color: #64748b; font-size: 11px;">#ID: ${egg.id}</div>
                             </div>
-                            
-                            <!-- Hidden Info Card -->
-                            <div style="
-                                background: rgba(15, 23, 42, 0.6);
-                                border: 1px solid rgba(148, 163, 184, 0.1);
-                                border-radius: 10px;
-                                padding: 15px;
-                                margin-bottom: 15px;
-                            ">
-                                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Hidden Information
-                                </div>
-                                <div style="color: #cbd5e1; font-size: 13px; line-height: 1.5;">
-                                    Rarity, Element, Type & Class are concealed.<br/>
-                                    <span style="color: #60a5fa;">Use a Scan Item to reveal!</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Incubation Status -->
-                            <div style="
-                                background: rgba(59, 130, 246, 0.1);
-                                border: 1px solid rgba(59, 130, 246, 0.2);
-                                border-radius: 10px;
-                                padding: 12px;
-                                margin-bottom: 15px;
-                            ">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span style="font-size: 20px;">⏱️</span>
-                                    <div>
-                                        <div style="color: #64748b; font-size: 11px; text-transform: uppercase;">Incubation</div>
-                                        <div style="color: #3b82f6; font-weight: 600; font-size: 14px;">
-                                            ${egg.incubation_started_at ? 'In Progress' : `${egg.incubation_time}h Required`}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Status and Action Buttons -->
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                ${statusHTML}
-                                ${actionHTML}
+                            <div style="margin-top: 15px; width: 100%;">
+                                ${actionButton}
                             </div>
                         </div>
                     `;
-                    return eggCard;
                 }).join('');
+
             } catch (error) {
                 console.error('Error loading eggs:', error);
             }
@@ -2811,8 +3024,8 @@
                 <div class="modal" style="
                     max-width: 600px;
                     background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98));
-                    border: 2px solid rgba(255,215,0,0.3);
-                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 100px rgba(255,215,0,0.2);
+                    border: 2px solid rgba(255, 215, 0, 0.3);
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 100px rgba(255, 215, 0, 0.2);
                     animation: slideInScale 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
                 ">
                     <!-- Celebration Header -->
@@ -3508,7 +3721,6 @@
                 alert('Cancel failed: ' + error.message);
             }
         };
-
     </script>
     <script src="js/modals.js"></script>
 </body>

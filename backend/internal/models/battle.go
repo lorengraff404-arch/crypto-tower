@@ -29,7 +29,9 @@ type Battle struct {
 	Winner   *User `gorm:"foreignKey:WinnerID" json:"-"`
 
 	// Betting (for PvP)
-	BetAmount       int64 `gorm:"default:0" json:"bet_amount"`
+	BetAmount       int64 `gorm:"default:0" json:"bet_amount"` // Deprecated or used as BaseStake
+	Player1Bet      int64 `gorm:"default:0" json:"player1_bet"`
+	Player2Bet      int64 `gorm:"default:0" json:"player2_bet"`
 	WinnerPayout    int64 `gorm:"default:0" json:"winner_payout"`
 	PlatformRevenue int64 `gorm:"default:0" json:"platform_revenue"`
 

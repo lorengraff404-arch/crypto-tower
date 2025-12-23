@@ -4,8 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Battle System</title>
+    <title>Battle Arena - Crypto Tower Defense</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --primary: #FFD700;
+            --secondary: #1a1a2e;
+            --accent: #e94560;
+            --bg-dark: #16213e;
+            --text-light: #e0e0e0;
+            --panel-bg: rgba(22, 33, 62, 0.9);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,263 +27,540 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .battle-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            gap: 20px;
-        }
-
-        .battle-header {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .characters-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-
-        .character-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-
-        .character-card:hover {
-            border-color: #4CAF50;
-            transform: translateY(-2px);
-        }
-
-        .character-card.active {
-            border-color: #FFD700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .hp-bar,
-        .mana-bar {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
+            background: url('assets/battle_bg_01.jpg') no-repeat center center fixed;
+            background-size: cover;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
             overflow: hidden;
-            margin: 8px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HUD - Top Bar */
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+            z-index: 10;
+        }
+
+        .battle-info {
+            display: flex;
+            gap: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stake-info {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--primary);
+            padding: 8px 15px;
+            border-radius: 4px;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .turn-timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+        }
+
+        /* Battle Field */
+        .battle-field {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            /* P1 Left, P2 Right */
+            align-items: center;
+            padding: 0 50px;
+            position: relative;
+        }
+
+        .team-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 300px;
+        }
+
+        .team-container.enemy {
+            align-items: flex-end;
+        }
+
+        /* Character Card (Compact for Battle) */
+        .battle-char {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .battle-char.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .battle-char.target-select:hover {
+            border-color: var(--accent);
+            cursor: w-resize;
+            /* Target cursor */
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+        }
+
+        .char-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .bar-container {
+            background: rgba(0, 0, 0, 0.5);
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
         }
 
         .hp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f44336, #ff5722);
-            transition: width 0.5s;
+            background: #ff4757;
         }
 
         .mana-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #2196F3, #03A9F4);
-            transition: width 0.5s;
+            background: #1e90ff;
         }
 
-        .abilities-panel {
+        /* Action Menu - Bottom */
+        .action-menu {
+            height: 140px;
+            background: var(--panel-bg);
+            border-top: 2px solid var(--primary);
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 200px 1fr 200px;
+            /* Log, Actions, Meta */
+            gap: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .battle-log {
+            font-size: 12px;
+            color: #ccc;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding-right: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .log-entry.crit {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .log-entry.damage {
+            color: #ff6b6b;
+        }
+
+        .log-entry.heal {
+            color: #1dd1a1;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-top: 15px;
         }
 
-        .ability-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px;
+        .skill-btn {
+            background: linear-gradient(135deg, #2f3542 0%, #1e272e 100%);
+            border: 1px solid #57606f;
             border-radius: 8px;
-            color: white;
+            color: #fff;
+            padding: 10px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
         }
 
-        .ability-btn:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .skill-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .ability-btn:disabled {
+        .skill-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .battle-log {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 14px;
+        .skill-cost {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 10px;
+            color: #74b9ff;
         }
 
-        .log-entry {
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .meta-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
         }
 
-        .status-victory {
-            background: linear-gradient(135deg, #4CAF50, #8BC34A);
-            padding: 20px;
-            text-align: center;
-            border-radius: 12px;
-            font-size: 24px;
+        .surrender-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .surrender-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s;
+        }
+
+        @keyframes floatDamage {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+        }
+
+        .damage-text {
+            position: absolute;
+            color: #ff4757;
             font-weight: bold;
-        }
-
-        .status-defeat {
-            background: linear-gradient(135deg, #f44336, #E91E63);
-            padding: 20px;
-            text-align: center;
-            border-radius: 12px;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 2px 2px 0 #000;
+            animation: floatDamage 1s forwards;
+            pointer-events: none;
+            z-index: 100;
         }
     </style>
 </head>
 
 <body>
-    <div class="battle-container">
-        <div class="battle-header">
-            <h1>⚔️ Battle System</h1>
-            <p id="status">Loading battle...</p>
+
+    <!-- HUD -->
+    <div class="hud-top">
+        <div class="battle-info">
+            <div class="stake-info" id="stakeDisplay">🏆 Pot: 0 GTK</div>
+            <div id="battleTypeBadge">PvE</div>
         </div>
-
-        <div id="battleContent"></div>
-
-        <div class="battle-log" id="battleLog">
-            <div class="log-entry">Battle started...</div>
+        <div class="turn-timer" id="turnTimer">30</div>
+        <div class="battle-info">
+            <div>Turn <span id="turnNumber">1</span></div>
         </div>
     </div>
 
-    <script>
-        const API_BASE = 'http://localhost:8080/api/v1';
-        let currentSession = null;
+    <!-- FIELD -->
+    <div class="battle-field" id="battleField">
+        <!-- P1 Team -->
+        <div class="team-container" id="playerTeam">
+            <!-- Populated via JS -->
+        </div>
+
+        <!-- VS Graphic -->
+        <div
+            style="font-family: 'Orbitron'; font-size: 48px; opacity: 0.2; position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none;">
+            VS</div>
+
+        <!-- P2/Enemy Team -->
+        <div class="team-container enemy" id="enemyTeam">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="action-menu">
+        <div class="battle-log" id="battleLog">
+            <div class="log-entry">Waiting for battle data...</div>
+        </div>
+
+        <div class="skills-grid" id="skillsGrid">
+            <!-- Skills populated based on active character -->
+            <button class="skill-btn" disabled>Waiting...</button>
+        </div>
+
+        <div class="meta-actions">
+            <button class="btn btn-sm btn-outline-light" onclick="toggleAuto()">🤖 Auto</button>
+            <button class="surrender-btn" onclick="surrender()">🏳️ Surrender</button>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script type="module">
+        import apiClient from './dist/js/api.js';
+
+        // State
+        let battleId = new URLSearchParams(window.location.search).get('id');
         let battleState = null;
+        let selectedSkill = null;
+        let autoMode = false;
+        let pollingInterval = null;
 
-        async function getToken() {
-            return localStorage.getItem('auth_token');
-        }
-
-        async function startRaid() {
-            const token = await getToken();
-            const response = await fetch(`${API_BASE}/raids/start`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ island_id: 1, team_characters: [] })
-            });
-            const data = await response.json();
-            currentSession = data.session_id;
-            await loadBattleState();
-        }
-
-        async function loadBattleState() {
-            if (!currentSession) return;
-
-            const token = await getToken();
-            const response = await fetch(`${API_BASE}/raids/${currentSession}/state`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            battleState = await response.json();
-            renderBattle();
-        }
-
-        async function executeTurn(characterId, abilityId, targetId) {
-            const token = await getToken();
-            const response = await fetch(`${API_BASE}/raids/${currentSession}/turn`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    character_id: characterId,
-                    action_type: 'ability',
-                    ability_id: abilityId,
-                    target_id: targetId
-                })
-            });
-            const result = await response.json();
-            addLog(result.result?.message || 'Turn executed');
-            await loadBattleState();
-        }
-
-        function renderBattle() {
-            const content = document.getElementById('battleContent');
-
-            if (battleState?.is_victory) {
-                content.innerHTML = '<div class="status-victory">🎉 VICTORY! 🎉</div>';
-                document.getElementById('status').textContent = 'Battle Won!';
+        // Init
+        async function init() {
+            if (!battleId) {
+                // Try to find active battle if none in URL
+                // For now, redirect home if no ID
+                alert("No battle specified. Redirecting to home.");
+                window.location.href = 'game.html';
                 return;
             }
 
-            if (battleState?.is_defeat) {
-                content.innerHTML = '<div class="status-defeat">💀 DEFEAT 💀</div>';
-                document.getElementById('status').textContent = 'Battle Lost';
+            await loadBattle();
+            startPolling();
+        }
+
+        async function loadBattle() {
+            try {
+                // Use new endpoint Phase 17 added? Or existing BattleHandler
+                // GET /battles/:id
+                battleState = await apiClient.get(`/battles/${battleId}`);
+                render();
+            } catch (err) {
+                console.error("Load Error", err);
+                addLog("Error loading battle: " + err.message);
+            }
+        }
+
+        function startPolling() {
+            pollingInterval = setInterval(loadBattle, 3000); // 3s poll
+        }
+
+        // Render Frame
+        function render() {
+            if (!battleState) return;
+
+            // HUD
+            document.getElementById('stakeDisplay').innerText = `🏆 Pot: ${(battleState.player1_bet + battleState.player2_bet).toLocaleString()} GTK`;
+            document.getElementById('battleTypeBadge').innerText = battleState.battle_type.toUpperCase();
+            document.getElementById('turnNumber').innerText = battleState.turn_number;
+
+            // Parse State (JSONB in DB, string in struct?)
+            // Assuming simplified structure for now or parsing LastTurnData
+            // NOTE: We need the full state (HP/Mana of all chars). 
+            // If the Go model doesn't return detailed state in GetBattle, we might need `/battles/:id/state`.
+            // For this layout, I'll assume we parse `PlayerStateP1` and `PlayerStateP2` if available,
+            // or `LastTurnData`.
+            // Let's assume the API returns `participants` arrays for P1/P2 in a custom response.
+            // If strictly using the Model, we might need to parse `PlayerStatePx` JSON strings.
+
+            let p1Team = [];
+            let p2Team = [];
+
+            try {
+                p1Team = JSON.parse(battleState.PlayerStateP1 || '[]');
+                p2Team = JSON.parse(battleState.PlayerStateP2 || '[]');
+            } catch (e) { console.error("Parse State Error", e); }
+
+            renderTeam('playerTeam', p1Team, true);
+            renderTeam('enemyTeam', p2Team, false);
+
+            // Turn Logic
+            const myId = parseJwt(localStorage.getItem('token')).id; // Simplified ID fetch
+            const isMyTurn = battleState.status === 'active' && battleState.current_turn_player_id === myId;
+
+            updateSkills(isMyTurn);
+
+            // Victory/Defeat
+            if (battleState.status === 'completed') {
+                clearInterval(pollingInterval);
+                if (battleState.winner_id === myId) showOverlay("VICTORY", "bg-success");
+                else showOverlay("DEFEAT", "bg-danger");
+            }
+        }
+
+        function renderTeam(containerId, team, isPlayer) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            team.forEach(char => {
+                const el = document.createElement('div');
+                el.className = `battle-char ${char.is_active ? 'active' : ''} ${selectedSkill && !isPlayer ? 'target-select' : ''}`;
+
+                // Click to target
+                if (!isPlayer && selectedSkill) {
+                    el.onclick = () => executeAction(selectedSkill, char.character_id);
+                }
+
+                el.innerHTML = `
+                    <div class="char-header">
+                        <span>${char.name}</span>
+                        <small>Lvl ${char.level}</small>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill hp-fill" style="width: ${(char.current_hp / char.max_hp) * 100}%"></div>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill mana-fill" style="width: ${(char.current_mana / char.max_mana) * 100}%"></div>
+                    </div>
+                    <div style="font-size: 10px; display: flex; justify-content: space-between;">
+                        <span>HP: ${char.current_hp}</span>
+                        <span>MP: ${char.current_mana}</span>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function updateSkills(isMyTurn) {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = '';
+
+            if (!isMyTurn) {
+                grid.innerHTML = '<button class="skill-btn" disabled>Opponent Thinking...</button>';
                 return;
             }
 
-            const states = JSON.parse(battleState?.character_states || '[]');
+            // Find my active char
+            // For now hardcoding standard skills. In real implementation, these come from `ActiveCharacter.Skills`
+            const skills = [
+                { id: 1, name: "Attack", cost: 0 },
+                { id: 2, name: "Heal", cost: 20 },
+                { id: 3, name: "Fireball", cost: 40 }
+            ];
 
-            content.innerHTML = `
-                <div class="characters-grid">
-                    ${states.map(char => `
-                        <div class="character-card ${char.type === 'player' ? 'active' : ''}">
-                            <h3>${char.type === 'player' ? '👤' : '👹'} Char ${char.char_id}</h3>
-                            <div>HP: ${char.current_hp}/${char.max_hp}</div>
-                            <div class="hp-bar">
-                                <div class="hp-fill" style="width: ${(char.current_hp / char.max_hp) * 100}%"></div>
-                            </div>
-                            <div>Mana: ${char.current_mana}/${char.max_mana}</div>
-                            <div class="mana-bar">
-                                <div class="mana-fill" style="width: ${(char.current_mana / char.max_mana) * 100}%"></div>
-                            </div>
-                            ${char.type === 'player' ? `
-                                <div class="abilities-panel">
-                                    <button class="ability-btn" onclick="executeTurn(${char.char_id}, 1, ${getFirstEnemy(states)})">⚡ Ability 1</button>
-                                    <button class="ability-btn" onclick="executeTurn(${char.char_id}, 2, ${getFirstEnemy(states)})">🔥 Ability 2</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
+            skills.forEach(skill => {
+                const btn = document.createElement('button');
+                btn.className = `skill-btn ${selectedSkill === skill.id ? 'border-warning' : ''}`;
+                btn.innerHTML = `
+                    <div>${skill.name}</div>
+                    <div class="skill-cost">${skill.cost} MP</div>
+                `;
+                btn.onclick = () => selectSkill(skill.id);
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectSkill(id) {
+            selectedSkill = id;
+            addLog("Select a target...");
+            render(); // Re-render to show target cursors
+        }
+
+        window.executeAction = async function (skillId, targetId) {
+            if (!skillId || !targetId) return;
+            selectedSkill = null; // Reset
+
+            try {
+                // Determine action type based on ID for this mockup
+                const actionType = skillId === 1 ? 'attack' : 'skill';
+
+                // POST /battles/:id/turn
+                await apiClient.post(`/battles/${battleId}/turn`, {
+                    character_id: 1, // TODO: Get actual active char ID from state
+                    target_id: targetId,
+                    action: actionType,
+                    skill_id: actionType === 'skill' ? skillId : null
+                });
+
+                addLog("Action sent!");
+                loadBattle(); // Refresh
+            } catch (err) {
+                addLog("Action Failed: " + err.message);
+            }
+        }
+
+        window.surrender = async function () {
+            if (!confirm("Give up? You will lose your stake.")) return;
+            try {
+                await apiClient.post(`/battles/${battleId}/surrender`);
+                location.reload();
+            } catch (e) { console.error(e); }
+        }
+
+        window.toggleAuto = function () {
+            autoMode = !autoMode;
+            addLog(`Auto Mode: ${autoMode ? 'ON' : 'OFF'}`);
+        }
+
+        function addLog(msg) {
+            const box = document.getElementById('battleLog');
+            const d = document.createElement('div');
+            d.className = 'log-entry';
+            d.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            box.insertBefore(d, box.firstChild);
+        }
+
+        function showOverlay(title, bgClass) {
+            const div = document.createElement('div');
+            div.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.8);z-index:999";
+            div.innerHTML = `
+                <div class="card ${bgClass} text-white p-5 text-center">
+                    <h1>${title}</h1>
+                    <button class="btn btn-light mt-3" onclick="window.location.href='game.html'">Return to Base</button>
                 </div>
             `;
+            document.body.appendChild(div);
         }
 
-        function getFirstEnemy(states) {
-            const enemy = states.find(s => s.type === 'enemy' && !s.is_fainted);
-            return enemy?.char_id || 0;
-        }
+        // Helper
+        function parseJwt(token) {
+            try {
+                var base64Url = token.split('.')[1];
+                var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) { return {}; }
+        };
 
-        function addLog(message) {
-            const log = document.getElementById('battleLog');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-            log.insertBefore(entry, log.firstChild);
-        }
+        // Start
+        init();
 
-        // Auto-start or load existing battle
-        if (localStorage.getItem('auth_token')) {
-            startRaid();
-        } else {
-            document.getElementById('status').textContent = 'Please login first';
-        }
     </script>
 </body>
 

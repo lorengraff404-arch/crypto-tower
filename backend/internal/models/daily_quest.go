@@ -47,11 +47,21 @@ func (QuestProgressTracking) TableName() string {
 
 // QuestTemplate defines a quest type that can be generated
 type QuestTemplate struct {
-	Type        string
-	Name        string
-	Description string
-	BaseTarget  int
-	ScaleFactor float64
-	Difficulty  string
-	ActionType  string // What action triggers progress
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Type        string    `gorm:"size:20;not null;index" json:"type"` // combat, collection, progression, special
+	Name        string    `gorm:"size:100;not null;uniqueIndex" json:"name"`
+	Description string    `gorm:"type:text;not null" json:"description"`
+	BaseTarget  int       `gorm:"not null" json:"base_target"`
+	ScaleFactor float64   `gorm:"type:decimal(5,2);default:0.1" json:"scale_factor"`
+	Difficulty  string    `gorm:"size:20;not null" json:"difficulty"` // common, uncommon, rare, epic
+	ActionType  string    `gorm:"size:50;not null" json:"action_type"`
+	RewardGTK   int       `gorm:"default:0" json:"reward_gtk"`
+	RewardTOWER int       `gorm:"default:0" json:"reward_tower"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// TableName specifies the table name for QuestTemplate
+func (QuestTemplate) TableName() string {
+	return "quest_templates"
 }

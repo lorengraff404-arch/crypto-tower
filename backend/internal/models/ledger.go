@@ -37,6 +37,7 @@ const (
 	TxTypeDeposit      TransactionType = "DEPOSIT"
 	TxTypeWithdraw     TransactionType = "WITHDRAWAL" // Changed from WITHDRAW
 	TxTypeWagerEnter   TransactionType = "WAGER_ENTER"
+	TxTypeWagerEntry   TransactionType = "WAGER_ENTRY" // Added alias/constant
 	TxTypeWagerWin     TransactionType = "WAGER_WIN"
 	TxTypeWagerRefund  TransactionType = "WAGER_REFUND" // Added
 	TxTypeWagerFee     TransactionType = "WAGER_FEE"

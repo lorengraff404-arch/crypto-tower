@@ -197,12 +197,29 @@ func (s *SkillActivationService) ValidateSkillActivation(char *models.Character,
 	return nil
 }
 
-// IsSkillActive checks if a skill is equipped in active slots
+// IsSkillActive checks if a skill is equipped in active slots (1-4)
 func (s *SkillActivationService) IsSkillActive(characterID, abilityID uint) bool {
-	var activeSkill models.CharacterActiveSkill
-	err := db.DB.Where("character_id = ? AND ability_id = ? AND is_locked = false", characterID, abilityID).
-		First(&activeSkill).Error
-	return err == nil
+	var char models.Character
+	if err := db.DB.Select("equipped_ability_1, equipped_ability_2, equipped_ability_3, equipped_ability_4").
+		First(&char, characterID).Error; err != nil {
+		return false
+	}
+
+	// Check if abilityID matches any of the 4 slots
+	if char.EquippedAbility1 != nil && *char.EquippedAbility1 == abilityID {
+		return true
+	}
+	if char.EquippedAbility2 != nil && *char.EquippedAbility2 == abilityID {
+		return true
+	}
+	if char.EquippedAbility3 != nil && *char.EquippedAbility3 == abilityID {
+		return true
+	}
+	if char.EquippedAbility4 != nil && *char.EquippedAbility4 == abilityID {
+		return true
+	}
+
+	return false
 }
 
 // IsOnCooldown checks if a skill is on cooldown
@@ -345,100 +362,89 @@ func (s *SkillActivationService) LogSkillUsage(req SkillActivationRequest, resul
 
 // GetActiveSkills returns all active skills for a character
 func (s *SkillActivationService) GetActiveSkills(characterID uint) ([]models.Ability, error) {
-	var activeSkills []models.CharacterActiveSkill
-	if err := db.DB.Where("character_id = ? AND is_locked = false", characterID).
-		Preload("Ability").
-		Find(&activeSkills).Error; err != nil {
+	var char models.Character
+	if err := db.DB.First(&char, characterID).Error; err != nil {
 		return nil, err
 	}
 
-	abilities := make([]models.Ability, len(activeSkills))
-	for i, as := range activeSkills {
-		abilities[i] = as.Ability
+	var abilityIDs []uint
+	if char.EquippedAbility1 != nil {
+		abilityIDs = append(abilityIDs, *char.EquippedAbility1)
+	}
+	if char.EquippedAbility2 != nil {
+		abilityIDs = append(abilityIDs, *char.EquippedAbility2)
+	}
+	if char.EquippedAbility3 != nil {
+		abilityIDs = append(abilityIDs, *char.EquippedAbility3)
+	}
+	if char.EquippedAbility4 != nil {
+		abilityIDs = append(abilityIDs, *char.EquippedAbility4)
+	}
+
+	if len(abilityIDs) == 0 {
+		return []models.Ability{}, nil
+	}
+
+	var abilities []models.Ability
+	if err := db.DB.Where("id IN ?", abilityIDs).Find(&abilities).Error; err != nil {
+		return nil, err
 	}
 
 	return abilities, nil
 }
 
 // SwapActiveSkill swaps a skill in/out of active slots
-func (s *SkillActivationService) SwapActiveSkill(characterID, oldAbilityID, newAbilityID uint) error {
-	// Verify character owns the new ability
-	var charAbility models.CharacterAbility
-	if err := db.DB.Where("character_id = ? AND ability_id = ?", characterID, newAbilityID).
-		First(&charAbility).Error; err != nil {
-		return errors.New("character doesn't have this ability")
+// Note: This duplicates functionality from AbilityEquipService but is kept for Handler compatibility
+// Ideally, the Handler should call AbilityEquipService directly
+func (s *SkillActivationService) SwapActiveSkill(userID, characterID, oldAbilityID, newAbilityID uint) error {
+	equipService := NewAbilityEquipService()
+
+	// Find which slot holds the old ability
+	var char models.Character
+	if err := db.DB.First(&char, characterID).Error; err != nil {
+		return err
 	}
 
-	// Find the active slot with old ability
-	var activeSlot models.CharacterActiveSkill
-	if err := db.DB.Where("character_id = ? AND ability_id = ?", characterID, oldAbilityID).
-		First(&activeSlot).Error; err != nil {
-		return errors.New("old ability not in active slots")
+	slotToSwap := 0
+	if char.EquippedAbility1 != nil && *char.EquippedAbility1 == oldAbilityID {
+		slotToSwap = 1
+	} else if char.EquippedAbility2 != nil && *char.EquippedAbility2 == oldAbilityID {
+		slotToSwap = 2
+	} else if char.EquippedAbility3 != nil && *char.EquippedAbility3 == oldAbilityID {
+		slotToSwap = 3
+	} else if char.EquippedAbility4 != nil && *char.EquippedAbility4 == oldAbilityID {
+		slotToSwap = 4
 	}
 
-	// Swap the ability
-	activeSlot.AbilityID = newAbilityID
-	return db.DB.Save(&activeSlot).Error
+	if slotToSwap == 0 {
+		return errors.New("old ability not found in any active slot")
+	}
+
+	return equipService.EquipAbility(userID, characterID, newAbilityID, slotToSwap)
 }
 
 // AutoEquipNewSkill equips a newly learned skill if an empty slot is available
 func (s *SkillActivationService) AutoEquipNewSkill(tx *gorm.DB, characterID, abilityID uint) error {
-	// Check if character already has this skill equipped (using tx)
-	var activeSkill models.CharacterActiveSkill
-	if err := tx.Where("character_id = ? AND ability_id = ? AND is_locked = false", characterID, abilityID).
-		First(&activeSkill).Error; err == nil {
+	var char models.Character
+	if err := tx.First(&char, characterID).Error; err != nil {
+		return err
+	}
+
+	// Check for empty slots and equip immediately
+	if char.EquippedAbility1 == nil {
+		char.EquippedAbility1 = &abilityID
+	} else if char.EquippedAbility2 == nil {
+		char.EquippedAbility2 = &abilityID
+	} else if char.EquippedAbility3 == nil {
+		char.EquippedAbility3 = &abilityID
+	} else if char.EquippedAbility4 == nil {
+		char.EquippedAbility4 = &abilityID
+	} else {
+		// No empty slots
 		return nil
 	}
 
-	// Find an empty active slot
-	// We want a slot that exists (created during init) but has AbilityID = 0 or is otherwise "empty"
-	// However, our current model implies slots are rows. If we only created rows for assigned skills, we might need to create a new row if under limit?
-	// Checking InitializeCharacterSkills: it creates rows with SlotPosition.
-	// But wait, it only creates rows for *assigned* skills.
-
-	// Let's check how many active slots the character *should* have unlocked.
-	var character models.Character
-	if err := tx.First(&character, characterID).Error; err != nil {
-		return err
-	}
-
-	// Get current active skills
-	var activeSkills []models.CharacterActiveSkill
-	if err := tx.Where("character_id = ?", characterID).Find(&activeSkills).Error; err != nil {
-		return err
-	}
-
-	// Determine max slots based on rarity
-	skillInitService := NewSkillInitializationService()
-	maxSlots := skillInitService.GetActiveSlotsByRarity(character.Rarity)
-
-	// If we have fewer active skills than max slots, we can add a new one
-	if len(activeSkills) < maxSlots {
-		// Determine next slot position
-		nextSlotPos := len(activeSkills) + 1
-
-		// Create new active skill entry
-		newActiveSkill := models.CharacterActiveSkill{
-			CharacterID:  characterID,
-			AbilityID:    abilityID,
-			SlotPosition: nextSlotPos,
-			IsLocked:     false, // Auto-equipped skills effectively unlock the slot usage
-			UnlockLevel:  skillInitService.GetUnlockLevelForSlot(nextSlotPos-1, character.Rarity),
-		}
-
-		// Double check unlock level
-		if character.Level < newActiveSkill.UnlockLevel {
-			// Slot physically exists but is locked? Or should we not equip?
-			// The requirement says "immediately usable".
-			// If the slot is locked by level, we can't really "use" it.
-			// But maybe the intention is to fill the slot so it's ready when unlocked.
-			newActiveSkill.IsLocked = true
-		}
-
-		return tx.Create(&newActiveSkill).Error
-	}
-
-	return nil
+	return tx.Save(&char).Error
 }
 
 // GetUsableSkills returns skills that are active, off cooldown, and affordable

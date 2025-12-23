@@ -1,0 +1,54 @@
+Compiling 2 files with Solc 0.8.28
+Solc 0.8.28 finished in 221.04ms
+Error: Compiler run failed:
+Warning (2519): This declaration shadows an existing declaration.
+  --> src/CharacterNFT.sol:88:9:
+   |
+88 |         string memory tokenURI
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+   --> src/CharacterNFT.sol:243:5:
+    |
+243 |     function tokenURI(uint256 tokenId)
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2519): This declaration shadows an existing declaration.
+  --> src/ItemNFT.sol:38:9:
+   |
+38 |         string memory uri
+   |         ^^^^^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+   --> src/ItemNFT.sol:156:5:
+    |
+156 |     function uri(uint256 tokenId) public view override returns (string memory) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Error (7576): Undeclared identifier.
+  --> src/GameToken.sol:71:47:
+   |
+71 |             dailyEmissions[today] + amount <= dailyEmissionCap,
+   |                                               ^^^^^^^^^^^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> src/GameToken.sol:87:44:
+   |
+87 |             dailyVolume[today] + amount <= dailyVolumeLimit,
+   |                                            ^^^^^^^^^^^^^^^^
+
+Error (7576): Undeclared identifier.
+   --> src/GameToken.sol:132:9:
+    |
+132 |         dailyEmissionCap = newCap;
+    |         ^^^^^^^^^^^^^^^^
+
+Error (7576): Undeclared identifier.
+   --> src/GameToken.sol:164:27:
+    |
+164 |         return emitted >= dailyEmissionCap ? 0 : dailyEmissionCap - emitted;
+    |                           ^^^^^^^^^^^^^^^^
+
+Error (7576): Undeclared identifier.
+   --> src/GameToken.sol:164:50:
+    |
+164 |         return emitted >= dailyEmissionCap ? 0 : dailyEmissionCap - emitted;
+    |                                                  ^^^^^^^^^^^^^^^^

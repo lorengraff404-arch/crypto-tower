@@ -137,3 +137,72 @@ func (s *LedgerService) TransferFunds(fromUser *uint, toUser *uint, amount int64
 
 	return s.CreateTransaction(txType, refID, "Fund Transfer", entries)
 }
+
+// TransferFundsWithTx executes transfer within existing transaction
+func (s *LedgerService) TransferFundsWithTx(tx *gorm.DB, fromUser *uint, toUser *uint, amount int64, txType models.TransactionType, refID string) error {
+	if amount <= 0 {
+		return errors.New("amount must be positive")
+	}
+
+	// We need Account IDs. Since we are inside a TX, we should probably fetch them with the TX too?
+	// GetOrCreateAccount handles creation, which might need to be in TX.
+	// Refactoring GetOrCreateAccount to take TX is complex.
+	// For now, let's assume accounts exist or use non-tx Get for lookup (safe if accounts exist).
+	// Better: Use `s.GetOrCreateAccount` but if it creates, it uses `s.db` (main DB).
+	// This breaks atomicity if creation fails but main TX commits?
+	// Actually no, creation is separate 1-time event. It's fine if account is created outside the wager TX.
+
+	fromAcc, err := s.GetOrCreateAccount(fromUser, models.AccountTypeWallet, "GTK")
+	if err != nil {
+		return err
+	}
+
+	// Logic for Escrow/System accounts (nil user)
+	var toAcc *models.LedgerAccount
+	if toUser == nil {
+		// Assuming Transfer to Escrow if nil? Or specific type?
+		// The caller passes nil for system, but GetOrCreateAccount needs type.
+		// Let's assume if toUser is nil, we look for Escrow? No, that's ambiguous.
+		// Update: The caller (StartBattle) passed `nil` for `toUser` but we need to know WHICH system account.
+		// StartBattle used `nil`. Let's fix StartBattle to pass System Account ID or handle it here.
+		// Re-reading StartBattle: `s.ledger.TransferFundsWithTx(tx, &player1ID, nil, ...)`
+		// This implies sending to "Sink" or "Escrow".
+		// We should change TransferFundsWithTx signature or logic.
+		// Use specific accounts.
+		toAcc, err = s.GetOrCreateAccount(nil, models.AccountTypeEscrow, "GTK") // Defaulting to Escrow for Wager context? Risky.
+	} else {
+		toAcc, err = s.GetOrCreateAccount(toUser, models.AccountTypeWallet, "GTK")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	entries := []models.LedgerEntry{
+		{AccountID: fromAcc.ID, Amount: -amount, Type: "DEBIT"},
+		{AccountID: toAcc.ID, Amount: amount, Type: "CREDIT"},
+	}
+
+	return s.CreateTransactionWithTx(tx, txType, refID, "Fund Transfer", entries)
+}
+
+// UnlockFunds refunds matched amount from Escrow to User (Used by Admin Termination)
+func (s *LedgerService) UnlockFunds(userID uint, amount int64, currency string) error {
+	// Find Escrow Account
+	escrow, err := s.GetOrCreateAccount(nil, models.AccountTypeEscrow, currency)
+	if err != nil {
+		return err
+	}
+	// Find User Account
+	userAcc, err := s.GetOrCreateAccount(&userID, models.AccountTypeWallet, currency)
+	if err != nil {
+		return err
+	}
+
+	entries := []models.LedgerEntry{
+		{AccountID: escrow.ID, Amount: -amount, Type: "DEBIT"},
+		{AccountID: userAcc.ID, Amount: amount, Type: "CREDIT"},
+	}
+
+	return s.CreateTransaction(models.TxTypeAdminAdj, "ADMIN_UNLOCK", "Admin Force Unlock", entries)
+}

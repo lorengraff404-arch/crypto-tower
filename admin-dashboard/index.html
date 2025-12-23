@@ -68,6 +68,7 @@
                     <a href="#"><i class="fas fa-users me-2"></i> Users</a>
                     <a href="#"><i class="fas fa-cogs me-2"></i> Live Ops</a>
                     <a href="#"><i class="fas fa-coins me-2"></i> Economy</a>
+                    <a href="#" onclick="showSection('battles')"><i class="fas fa-swords me-2"></i> Battles</a>
                     <a href="#"><i class="fas fa-file-alt me-2"></i> Audit Logs</a>
                 </nav>
             </div>
@@ -180,6 +181,65 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Battle Management Section -->
+                    <div id="battles-section" class="d-none">
+                        <h3 class="mb-3">Battle Management</h3>
+
+                        <!-- Active Battles -->
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <i class="fas fa-bolt me-2"></i> Active Battles
+                                <button class="btn btn-sm btn-dark float-end"
+                                    onclick="loadActiveBattles()">Refresh</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>P1 (Bet)</th>
+                                                <th>P2 (Bet)</th>
+                                                <th>Type</th>
+                                                <th>Started</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="activeBattlesTable">
+                                            <tr>
+                                                <td colspan="6" class="text-center">Loading...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Battle History -->
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                <i class="fas fa-history me-2"></i> Recent History
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Winner</th>
+                                                <th>Loser</th>
+                                                <th>Type</th>
+                                                <th>Ended</th>
+                                                <th>Log</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="historyBattlesTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -187,17 +247,104 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="battle_logic.js"></script>
     <script>
-        // Logic to connect to Backend API
+        // Backend API Configuration
         const API_URL = "http://localhost:8080/api/v1";
-        // Mock Auth for Demo (Real impl would use JWT from localStorage)
         const token = localStorage.getItem('token');
 
+        // Initialize Dashboard
+        if (!token) {
+            document.body.innerHTML = '<div class="container mt-5 text-center"><h3>Access Denied</h3><p>Please log in via the main game first with an Admin account.</p><a href="http://localhost:8080/game.html" class="btn btn-primary mt-3">Go to Game</a></div>';
+        } else {
+            loadDashboard();
+        }
+
+        // Load All Dashboard Data
+        async function loadDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadSettings()
+            ]);
+        }
+
+        // Load Revenue Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/admin/revenue/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    if (res.status === 403) {
+                        alert('Access Denied: Admin privileges required');
+                        return;
+                    }
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                console.log('Revenue Stats:', data);
+
+                // Update Stats Cards
+                document.getElementById('statTotalUsers').innerText = (data.total_users || 0).toLocaleString();
+                document.getElementById('statRevenue').innerText = (data.total_revenue_gtk || 0).toLocaleString();
+                document.getElementById('statActiveBattles').innerText = (data.active_battles || 0).toLocaleString();
+
+                // Update admin name
+                document.getElementById('adminName').innerText = `Admin Panel`;
+
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+                document.getElementById('statTotalUsers').innerText = 'Error';
+                document.getElementById('statRevenue').innerText = 'Error';
+                document.getElementById('statActiveBattles').innerText = 'Error';
+            }
+        }
+
+        // Load Current Settings
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_URL}/admin/settings`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const settings = await res.json();
+                    console.log('Current Settings:', settings);
+
+                    // Populate config form with actual values
+                    const xpSetting = settings.find(s => s.key === 'xp_multiplier');
+                    const feeSetting = settings.find(s => s.key === 'wager_fee_percent');
+                    const maintSetting = settings.find(s => s.key === 'maintenance_mode');
+
+                    if (xpSetting) {
+                        document.querySelector('input[type="number"][step="0.1"]').value = xpSetting.value;
+                    }
+                    if (feeSetting) {
+                        document.querySelectorAll('input[type="number"]')[1].value = feeSetting.value;
+                    }
+                    if (maintSetting) {
+                        document.querySelector('input[type="checkbox"]').checked = maintSetting.value === 'true';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        // Ban User Form
         document.getElementById('banForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const target = document.getElementById('banTarget').value;
             const duration = parseInt(document.getElementById('banDuration').value);
             const reason = document.getElementById('banReason').value;
+
+            if (!target || !duration) {
+                alert('Please fill all fields');
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/admin/ban`, {
@@ -206,46 +353,76 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ target_id: parseInt(target), reason, duration })
+                    body: JSON.stringify({
+                        target_id: parseInt(target),
+                        reason,
+                        duration
+                    })
                 });
+
                 const data = await res.json();
+
                 if (res.ok) {
-                    alert('User Banned Successfully!');
+                    alert('✅ User Banned Successfully!');
+                    document.getElementById('banForm').reset();
+                    // Refresh stats
+                    loadStats();
                 } else {
-                    alert('Error: ' + data.error);
+                    alert('❌ Error: ' + (data.error || 'Unknown error'));
                 }
             } catch (err) {
-                alert('Network Panic: ' + err.message);
+                alert('Network Error: ' + err.message);
+                console.error(err);
             }
         });
 
-        // Initial Load
-        async function loadStats() {
-            if (!token) return; // Silent fail if not logged in
+        // Config Update Button
+        document.querySelector('button[type="button"]').addEventListener('click', async () => {
+            const xpValue = document.querySelector('input[type="number"][step="0.1"]').value;
+            const feeValue = document.querySelectorAll('input[type="number"]')[1].value;
+            const maintValue = document.querySelector('input[type="checkbox"]').checked;
+
             try {
-                const res = await fetch(`${API_URL}/revenue/stats`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
+                // Update XP Multiplier
+                await updateSetting('xp_multiplier', xpValue, 'float', 'Global XP multiplier');
 
-                    // Wire up stats
-                    document.getElementById('statRevenue').innerText = (data.total_revenue_gtk || 0).toLocaleString();
-                    document.getElementById('statTotalUsers').innerText = (data.total_users || 0).toLocaleString();
-                    document.getElementById('statActiveBattles').innerText = (data.active_battles || 0).toLocaleString();
+                // Update Wager Fee
+                await updateSetting('wager_fee_percent', feeValue, 'float', 'Platform fee percentage');
 
-                    // Optional: If we had a reports endpoint
-                    // document.getElementById('statReports').innerText = data.pending_reports || '0';
-                }
-            } catch (e) { console.error(e); }
+                // Update Maintenance Mode
+                await updateSetting('maintenance_mode', String(maintValue), 'bool', 'System maintenance flag');
+
+                alert('✅ Configuration Updated Successfully!');
+                loadSettings(); // Refresh
+
+            } catch (err) {
+                alert('❌ Failed to update config: ' + err.message);
+            }
+        });
+
+        // Helper: Update Single Setting
+        async function updateSetting(key, value, type, description) {
+            const res = await fetch(`${API_URL}/admin/settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ key, value, type, description })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Update failed');
+            }
+
+            return await res.json();
         }
 
-        // Check Auth
-        if (!token) {
-            document.body.innerHTML = '<div class="container mt-5 text-center"><h3>Access Denied</h3><p>Please log in via the main game first with an Admin account.</p></div>';
-        } else {
-            loadStats();
-        }
+        // Auto-refresh stats every 30 seconds
+        setInterval(() => {
+            if (token) loadStats();
+        }, 30000);
     </script>
 </body>
 

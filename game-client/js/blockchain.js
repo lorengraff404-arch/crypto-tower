@@ -13,8 +13,8 @@ export const BLOCKCHAIN_CONFIG = {
     blockExplorerUrls: ['https://opbnb-testnet.bscscan.com/'],
     contracts: {
         // Placeholder addresses - TO BE UPDATED WITH REAL DEPLOYMENT
-        TOWER: '0x7e859a8578642a8b965f8c37107c80536c478e5f',
-        GTK: '0x6543216543216543216543216543216543216543'
+        TOWER: '0x66c83Ff8839D4DAD387AD22D48d48605D5C1aDa3',
+        GTK: '0xDc4Bf3BbADC42Cc9feE3790B84ca1D532C036588'
     }
 };
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lorengraff/crypto-tower-defense/internal/db"
 	"github.com/lorengraff/crypto-tower-defense/pkg/config"
 )
 
@@ -64,9 +65,25 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		// Extract claims
 		claims, ok := token.Claims.(*Claims)
 		if !ok || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid token claims",
-			})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		// Security: Check Status in DB (BAN check)
+		var user struct {
+			Status   string
+			IsBanned bool
+		}
+		// Optimized query: only select status fields
+		if err := db.DB.Table("users").Select("status, is_banned").Where("id = ?", claims.UserID).Scan(&user).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+			c.Abort()
+			return
+		}
+
+		if user.IsBanned || user.Status == "BANNED" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account suspended. Contact support."})
 			c.Abort()
 			return
 		}
